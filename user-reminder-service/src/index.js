@@ -2,6 +2,9 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
+// Importar rutas
+const userRoutes = require("./routes/userRoutes");
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -21,6 +24,9 @@ app.get("/", (req, res) => {
 app.get("/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
+
+// Rutas de usuarios
+app.use("/api/users", userRoutes);
 
 // Iniciar servidor
 app.listen(PORT, () => {
