@@ -79,6 +79,79 @@ const registerUser = async (req, res) => {
   }
 };
 
+// Login de usuario
+const loginUser = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // 1. Validar que todos los campos estén presentes
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email y contraseña son obligatorios",
+      });
+    }
+
+    // 2. Buscar usuario por email
+    const result = await pool.query(
+      "SELECT id, name, email, password_hash, created_at FROM users WHERE email = $1",
+      [email]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: "Credenciales inválidas",
+      });
+    }
+
+    const user = result.rows[0];
+
+    // 3. Verificar contraseña
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Credenciales inválidas",
+      });
+    }
+
+    // 4. Generar token JWT
+    const jwt = require("jsonwebtoken");
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+    );
+
+    // 5. Responder con éxito
+    res.json({
+      success: true,
+      message: "Login exitoso",
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        created_at: user.created_at,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error al hacer login:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error interno del servidor",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   registerUser,
+  loginUser,
 };
