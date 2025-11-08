@@ -1,8 +1,9 @@
 const pool = require("../config/database");
+const geoService = require("../services/geoService");
 
 // CREATE - Crear nuevo recordatorio
 const createReminder = async (req, res) => {
-  const { title, description, reminder_type, datetime, location_id } = req.body;
+  const { title, description, reminder_type, datetime, address } = req.body;
   const userId = req.user.userId; // Del token JWT
 
   try {
@@ -35,7 +36,59 @@ const createReminder = async (req, res) => {
       });
     }
 
-    // Insertar recordatorio
+    // Si es tipo location, debe tener dirección
+    if (
+      (reminder_type === "location" || reminder_type === "both") &&
+      !address
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Los recordatorios de tipo location requieren una dirección",
+      });
+    }
+
+    let locationId = null;
+    let coordinates = null;
+
+    // Si tiene ubicación, geocodificar y guardar
+    if (reminder_type === "location" || reminder_type === "both") {
+      // 1. Geocodificar la dirección
+      const geocodeResult = await geoService.geocodeAddress(address);
+
+      if (!geocodeResult.success) {
+        return res.status(400).json({
+          success: false,
+          message: "No se pudo geocodificar la dirección",
+          error: geocodeResult.error,
+        });
+      }
+
+      coordinates = {
+        lat: geocodeResult.data.lat,
+        lng: geocodeResult.data.lng,
+      };
+
+      // 2. Guardar ubicación en MongoDB
+      const saveLocationResult = await geoService.saveLocation({
+        name: title,
+        lat: coordinates.lat,
+        lng: coordinates.lng,
+        address: address,
+        user_id: userId,
+      });
+
+      if (!saveLocationResult.success) {
+        return res.status(500).json({
+          success: false,
+          message: "Error al guardar la ubicación",
+          error: saveLocationResult.error,
+        });
+      }
+
+      locationId = saveLocationResult.location_id;
+    }
+
+    // Insertar recordatorio en PostgreSQL
     const result = await pool.query(
       `INSERT INTO reminders (user_id, title, description, reminder_type, datetime, location_id, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
@@ -46,14 +99,22 @@ const createReminder = async (req, res) => {
         description || null,
         reminder_type,
         datetime || null,
-        location_id || null,
+        locationId,
       ]
     );
+
+    const reminder = result.rows[0];
+
+    // Añadir coordenadas a la respuesta si existen
+    if (coordinates) {
+      reminder.coordinates = coordinates;
+      reminder.address = address;
+    }
 
     res.status(201).json({
       success: true,
       message: "Recordatorio creado exitosamente",
-      reminder: result.rows[0],
+      reminder: reminder,
     });
   } catch (error) {
     console.error("❌ Error al crear recordatorio:", error);
