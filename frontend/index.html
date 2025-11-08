@@ -3,54 +3,94 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GeoRemind - Recordatorios Inteligentes</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-      .container {
-        background: white;
-        padding: 3rem;
-        border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        text-align: center;
-        max-width: 500px;
-      }
-      h1 {
-        color: #667eea;
-        margin-bottom: 1rem;
-        font-size: 2.5rem;
-      }
-      p {
-        color: #666;
-        margin-bottom: 2rem;
-        line-height: 1.6;
-      }
-      .status {
-        display: inline-block;
-        padding: 0.5rem 1rem;
-        background: #10b981;
-        color: white;
-        border-radius: 20px;
-        font-weight: bold;
-      }
-    </style>
+    <title>GeoRemind - Login</title>
+    <link rel="stylesheet" href="css/styles.css" />
   </head>
-  <body>
-    <div class="container">
-      <h1>🗺️ GeoRemind</h1>
-      <p>Tu asistente de recordatorios inteligentes basados en ubicación</p>
-      <div class="status">✅ Sistema en desarrollo</div>
+  <body class="auth-page">
+    <div class="auth-container">
+      <div class="auth-card">
+        <div class="auth-header">
+          <h1>🗺️ GeoRemind</h1>
+          <p>Recordatorios inteligentes basados en ubicación</p>
+        </div>
+
+        <!-- Formulario de Login -->
+        <form id="loginForm" class="auth-form">
+          <h2>Iniciar Sesión</h2>
+
+          <div class="form-group">
+            <label for="loginEmail">📧 Email</label>
+            <input
+              type="email"
+              id="loginEmail"
+              placeholder="tu@email.com"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="loginPassword">🔒 Contraseña</label>
+            <input
+              type="password"
+              id="loginPassword"
+              placeholder="Mínimo 6 caracteres"
+              required
+            />
+          </div>
+
+          <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+
+          <p class="switch-form">
+            ¿No tienes cuenta? <a href="#" id="showRegister">Regístrate aquí</a>
+          </p>
+        </form>
+
+        <!-- Formulario de Registro (oculto por defecto) -->
+        <form id="registerForm" class="auth-form" style="display: none">
+          <h2>Crear Cuenta</h2>
+
+          <div class="form-group">
+            <label for="registerName">👤 Nombre</label>
+            <input
+              type="text"
+              id="registerName"
+              placeholder="Tu nombre completo"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="registerEmail">📧 Email</label>
+            <input
+              type="email"
+              id="registerEmail"
+              placeholder="tu@email.com"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="registerPassword">🔒 Contraseña</label>
+            <input
+              type="password"
+              id="registerPassword"
+              placeholder="Mínimo 6 caracteres"
+              required
+            />
+          </div>
+
+          <button type="submit" class="btn btn-primary">Registrarse</button>
+
+          <p class="switch-form">
+            ¿Ya tienes cuenta? <a href="#" id="showLogin">Inicia sesión aquí</a>
+          </p>
+        </form>
+
+        <!-- Mensajes de error/éxito -->
+        <div id="authMessage" class="message"></div>
+      </div>
     </div>
+
+    <script src="js/auth.js"></script>
   </body>
 </html>
