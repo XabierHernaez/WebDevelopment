@@ -3,8 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GeoRemind - Dashboard</title>
+    <title>GeoRemind - Crear Recordatorio</title>
     <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/create-reminder.css" />
 
     <!-- Leaflet CSS -->
     <link
@@ -12,59 +13,22 @@
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     />
   </head>
-  <body class="dashboard-page">
+  <body class="create-reminder-page">
     <!-- Header -->
-    <header class="header">
-      <div class="header-content">
-        <h1>🗺️ GeoRemind</h1>
-        <div class="user-info">
-          <span id="userName">Usuario</span>
-          <button id="logoutBtn" class="btn btn-secondary">
-            Cerrar Sesión
-          </button>
-        </div>
+    <header class="header-gradient">
+      <div class="header-content-center">
+        <button id="backBtn" class="btn-back">← Volver</button>
+        <h1>Crear Nuevo Recordatorio</h1>
+        <div></div>
       </div>
     </header>
 
-    <div class="dashboard-container">
-      <!-- Panel lateral con recordatorios -->
-      <aside class="sidebar">
-        <div class="sidebar-header">
-          <h2>📝 Mis Recordatorios</h2>
-          <button id="newReminderBtn" class="btn btn-primary btn-sm">
-            + Nuevo
-          </button>
-        </div>
-
-        <div class="reminders-list" id="remindersList">
-          <div class="loading">Cargando recordatorios...</div>
-        </div>
-      </aside>
-
-      <!-- Área principal con mapa -->
-      <main class="main-content">
-        <div id="map" class="map-container"></div>
-
-        <!-- Controles del mapa -->
-        <div class="map-controls">
-          <button id="myLocationBtn" class="btn-control" title="Mi ubicación">
-            📍
-          </button>
-        </div>
-      </main>
-    </div>
-
-    <!-- Modal para crear/editar recordatorio -->
-    <div id="reminderModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3 id="modalTitle">Nuevo Recordatorio</h3>
-          <button class="modal-close" id="closeModal">&times;</button>
-        </div>
-
+    <div class="create-container">
+      <!-- Formulario (Izquierda) -->
+      <div class="form-section">
         <form id="reminderForm">
           <div class="form-group">
-            <label for="reminderTitle">📌 Título</label>
+            <label for="reminderTitle">Título</label>
             <input
               type="text"
               id="reminderTitle"
@@ -74,16 +38,16 @@
           </div>
 
           <div class="form-group">
-            <label for="reminderDescription">📄 Descripción</label>
+            <label for="reminderDescription">Descripción</label>
             <textarea
               id="reminderDescription"
               rows="3"
-              placeholder="Detalles del recordatorio (opcional)"
+              placeholder="Detalles adicionales..."
             ></textarea>
           </div>
 
           <div class="form-group">
-            <label for="reminderType">🔔 Tipo de Recordatorio</label>
+            <label for="reminderType">Tipo de recordatorio</label>
             <select id="reminderType" required>
               <option value="datetime">⏰ Por fecha y hora</option>
               <option value="location">📍 Por ubicación</option>
@@ -92,38 +56,70 @@
           </div>
 
           <div class="form-group" id="datetimeGroup">
-            <label for="reminderDatetime">📅 Fecha y Hora</label>
+            <label for="reminderDatetime">Fecha y hora (opcional)</label>
             <input type="datetime-local" id="reminderDatetime" />
           </div>
 
           <div class="form-group" id="locationGroup" style="display: none">
-            <label for="reminderAddress">📍 Dirección</label>
+            <label for="reminderAddress">Buscar ubicación</label>
             <input
               type="text"
               id="reminderAddress"
-              placeholder="Ej: Gran Vía 66, Bilbao"
+              placeholder="Busca una dirección o lugar..."
             />
-            <small class="form-hint"
-              >O haz click en el mapa para seleccionar ubicación</small
+            <button type="button" id="searchBtn" class="btn-search">
+              🔍 Buscar
+            </button>
+
+            <div
+              id="selectedLocationInfo"
+              class="location-info"
+              style="display: none"
             >
-            <div id="selectedLocation" class="selected-location"></div>
+              <p class="location-label">📍 Ubicación seleccionada:</p>
+              <p id="selectedAddress" class="location-address"></p>
+              <p id="selectedCoords" class="location-coords"></p>
+            </div>
           </div>
 
-          <div class="form-actions">
-            <button type="button" class="btn btn-secondary" id="cancelBtn">
-              Cancelar
-            </button>
-            <button type="submit" class="btn btn-primary">Guardar</button>
-          </div>
+          <button type="submit" class="btn-save">Guardar Recordatorio</button>
         </form>
+      </div>
+
+      <!-- Mapa / Info (Derecha) -->
+      <div class="map-section" id="mapSection">
+        <!-- Panel de información (cuando es "Por fecha") -->
+        <div id="infoPanel" class="info-panel">
+          <div class="info-icon">⏰</div>
+          <h3 class="info-title">Recordatorio por Fecha y Hora</h3>
+          <p class="info-description">
+            Este recordatorio se activará en la fecha y hora que selecciones.
+            Recibirás una notificación para recordarte tu tarea.
+          </p>
+          <div class="info-tips">
+            <h4>💡 Consejos:</h4>
+            <ul>
+              <li>Sé específico con el título</li>
+              <li>Añade detalles en la descripción</li>
+              <li>Configura la hora con anticipación</li>
+              <li>Marca como completado al terminar</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Mapa interactivo (cuando es "Por ubicación" o "Ambos") -->
+        <div id="mapContainer" class="map-placeholder" style="display: none">
+          <p>🗺️ Mapa Interactivo (Leaflet / Google Maps)</p>
+          <div id="map" class="map-container"></div>
+        </div>
       </div>
     </div>
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <!-- Scripts personalizados -->
-    <script src="js/map.js"></script>
-    <script src="js/dashboard.js"></script>
+    <!-- Scripts -->
+    <script src="js/create-reminder-map.js"></script>
+    <script src="js/create-reminder.js"></script>
   </body>
 </html>

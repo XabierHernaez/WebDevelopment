@@ -240,9 +240,8 @@ reminderForm.addEventListener("submit", async (e) => {
     const data = await response.json();
 
     if (data.success) {
-      closeModalFn();
-      loadReminders();
       alert("✅ Recordatorio creado exitosamente");
+      window.location.href = "reminders-list.html";
     } else {
       alert("❌ Error: " + data.message);
     }

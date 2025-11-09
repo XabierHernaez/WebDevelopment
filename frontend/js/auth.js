@@ -57,7 +57,7 @@ loginForm.addEventListener("submit", async (e) => {
 
       // Redirigir al dashboard
       setTimeout(() => {
-        window.location.href = "dashboard.html";
+        window.location.href = "reminders-list.html";
       }, 1000);
     } else {
       showMessage(data.message || "Error al iniciar sesión", "error");
@@ -115,5 +115,5 @@ registerForm.addEventListener("submit", async (e) => {
 
 // Verificar si ya hay sesión activa
 if (localStorage.getItem("token")) {
-  window.location.href = "dashboard.html";
+  window.location.href = "reminders-list.html";
 }

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GeoRemind - Mis Recordatorios</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/reminders-list.css" />
+  </head>
+  <body class="reminders-list-page">
+    <!-- Header -->
+    <header class="header-gradient">
+      <div class="header-content-center">
+        <h1>📝 Mis Recordatorios</h1>
+      </div>
+    </header>
+
+    <div class="container">
+      <!-- Saludo y botón principal -->
+      <div class="top-section">
+        <h2 id="welcomeMessage">Hola, Usuario 👋</h2>
+        <button id="newReminderBtn" class="btn-new-reminder">
+          + Nuevo Recordatorio
+        </button>
+      </div>
+
+      <!-- Lista de recordatorios -->
+      <div class="reminders-container" id="remindersList">
+        <div class="loading">Cargando recordatorios...</div>
+      </div>
+    </div>
+
+    <!-- Botón flotante de cerrar sesión -->
+    <button id="logoutBtn" class="btn-floating" title="Cerrar Sesión">
+      🚪
+    </button>
+
+    <script src="js/reminders-list.js"></script>
+  </body>
+</html>
