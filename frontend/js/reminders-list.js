@@ -14,6 +14,7 @@ const welcomeMessage = document.getElementById("welcomeMessage");
 const newReminderBtn = document.getElementById("newReminderBtn");
 const remindersList = document.getElementById("remindersList");
 const logoutBtn = document.getElementById("logoutBtn");
+const calendarBtn = document.getElementById("calendarBtn");
 
 // Mostrar nombre del usuario
 welcomeMessage.textContent = `Hola, ${currentUser.name} 👋`;
@@ -30,6 +31,11 @@ logoutBtn.addEventListener("click", () => {
 // Ir a crear nuevo recordatorio
 newReminderBtn.addEventListener("click", () => {
   window.location.href = "dashboard.html";
+});
+
+// Ir al calendario
+calendarBtn.addEventListener("click", () => {
+  window.location.href = "calendar.html";
 });
 
 // Cargar recordatorios
