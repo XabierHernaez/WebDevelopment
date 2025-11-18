@@ -83,6 +83,7 @@ function renderReminders() {
       if (reminder.reminder_type === "both") typeClass = "both";
 
       const completedClass = reminder.is_completed ? "completed" : "";
+      const notifiedClass = reminder.is_notified ? "notified" : "";
 
       // Emoji según tipo
       let emoji = "📌";
@@ -91,7 +92,7 @@ function renderReminders() {
       if (reminder.reminder_type === "both") emoji = "⏰📍";
 
       return `
-            <div class="reminder-item ${typeClass} ${completedClass}" data-id="${
+            <div class="reminder-item ${typeClass} ${completedClass} ${notifiedClass}" data-id="${
         reminder.id
       }">
                 <div class="reminder-header">
