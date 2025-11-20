@@ -220,31 +220,31 @@ const updateReminder = async (req, res) => {
     let paramCount = 1;
 
     if (title !== undefined) {
-      updates.push(`title = ${paramCount++}`);
+      updates.push(`title = $${paramCount++}`);
       values.push(title);
     }
     if (description !== undefined) {
-      updates.push(`description = ${paramCount++}`);
+      updates.push(`description = $${paramCount++}`);
       values.push(description);
     }
     if (reminder_type !== undefined) {
-      updates.push(`reminder_type = ${paramCount++}`);
+      updates.push(`reminder_type = $${paramCount++}`);
       values.push(reminder_type);
     }
     if (datetime !== undefined) {
-      updates.push(`datetime = ${paramCount++}`);
+      updates.push(`datetime = $${paramCount++}`);
       values.push(datetime);
     }
     if (location_id !== undefined) {
-      updates.push(`location_id = ${paramCount++}`);
+      updates.push(`location_id = $${paramCount++}`);
       values.push(location_id);
     }
     if (is_completed !== undefined) {
-      updates.push(`is_completed = ${paramCount++}`);
+      updates.push(`is_completed = $${paramCount++}`);
       values.push(is_completed);
     }
     if (is_notified !== undefined) {
-      updates.push(`is_notified = ${paramCount++}`);
+      updates.push(`is_notified = $${paramCount++}`);
       values.push(is_notified);
     }
 
@@ -263,7 +263,7 @@ const updateReminder = async (req, res) => {
     const result = await pool.query(
       `UPDATE reminders 
        SET ${updates.join(", ")}
-       WHERE id = ${paramCount++} AND user_id = ${paramCount++}
+       WHERE id = $${paramCount++} AND user_id = $${paramCount++}
        RETURNING *`,
       values
     );
