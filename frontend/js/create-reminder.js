@@ -190,7 +190,14 @@ reminderForm.addEventListener("submit", async (e) => {
     const data = await response.json();
 
     if (data.success) {
-      alert("✅ Recordatorio creado exitosamente");
+      // Si tiene ubicación, mostrar mensaje especial
+      if (type === "location" || type === "both") {
+        alert(
+          "✅ Recordatorio creado exitosamente\n📍 Se te recordará cuando te acerques al lugar"
+        );
+      } else {
+        alert("✅ Recordatorio creado exitosamente");
+      }
       window.location.href = "reminders-list.html";
     } else {
       alert("❌ Error: " + data.message);

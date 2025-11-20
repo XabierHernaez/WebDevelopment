@@ -158,6 +158,53 @@ async def get_user_locations(user_id: int):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener ubicaciones: {str(e)}")
+    
+    # Endpoint para obtener ubicación por ID
+@app.get("/api/locations/{location_id}")
+async def get_location_by_id(location_id: str):
+    """
+    Obtiene los detalles de una ubicación específica por su ID
+    """
+    try:
+        from bson import ObjectId
+        
+        # Buscar en MongoDB
+        location = locations_collection.find_one({"_id": ObjectId(location_id)})
+        
+        if not location:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Ubicación no encontrada: {location_id}"
+            )
+        
+        # Extraer coordenadas del formato GeoJSON
+        coordinates = location.get("coordinates", {}).get("coordinates", [])
+        
+        if len(coordinates) < 2:
+            raise HTTPException(
+                status_code=500,
+                detail="Coordenadas inválidas en la ubicación"
+            )
+        
+        # GeoJSON guarda como [lng, lat], devolvemos como {lat, lng}
+        return {
+            "success": True,
+            "data": {
+                "id": str(location["_id"]),
+                "name": location.get("name"),
+                "lat": coordinates[1],  # Segundo elemento es latitud
+                "lng": coordinates[0],  # Primer elemento es longitud
+                "address": location.get("address"),
+                "user_id": location.get("user_id"),
+                "created_at": location.get("created_at").isoformat() if location.get("created_at") else None
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al obtener ubicación: {str(e)}"
+        )
 
 if __name__ == "__main__":
     import uvicorn

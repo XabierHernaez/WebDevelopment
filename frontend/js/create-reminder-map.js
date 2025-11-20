@@ -4,6 +4,21 @@ let currentMarker = null;
 let userLocationMarker = null;
 let isGettingLocation = false; // Para controlar el estado
 
+// Nueva función: Verificar permisos sin pedirlos
+async function checkMapPermissions() {
+  if (!navigator.permissions) {
+    return true; // Si no se puede verificar, intentar de todas formas
+  }
+
+  try {
+    const result = await navigator.permissions.query({ name: "geolocation" });
+    return result.state === "granted";
+  } catch (error) {
+    console.log("No se pudo verificar permisos");
+    return true; // En caso de error, intentar
+  }
+}
+
 // Inicializar mapa
 function initializeMap() {
   // Si ya existe, no recrear
@@ -11,6 +26,17 @@ function initializeMap() {
 
   // Centro temporal en Bilbao (mientras se obtiene ubicación real)
   const bilbaoCoords = [43.263, -2.935];
+
+  // IMPORTANTE: Configurar rutas de iconos de Leaflet
+  delete L.Icon.Default.prototype._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+    iconUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+    shadowUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+  });
 
   // Crear mapa
   map = L.map("map").setView(bilbaoCoords, 13);
@@ -35,20 +61,26 @@ function initializeMap() {
   getUserLocation();
 }
 
-// Obtener ubicación actual del usuario (MEJORADO)
-function getUserLocation() {
+async function getUserLocation() {
   if (!navigator.geolocation) {
     console.warn("Geolocalización no disponible en este navegador");
     return;
   }
 
-  if (isGettingLocation) return; // Evitar múltiples llamadas
+  if (isGettingLocation) return;
 
-  isGettingLocation = true;
-  console.log("📍 Obteniendo tu ubicación...");
+  // Verificar permisos primero
+  const hasPermission = await checkMapPermissions();
 
-  // Mostrar indicador visual de carga
-  showLocationLoading();
+  if (hasPermission) {
+    // Tiene permisos, mostrar loading
+    isGettingLocation = true;
+    console.log("📍 Obteniendo tu ubicación...");
+    showLocationLoading();
+  } else {
+    // No tiene permisos, intentar silenciosamente (puede que sí los tenga pero no se pudo verificar)
+    console.log("📍 Intentando obtener ubicación...");
+  }
 
   navigator.geolocation.getCurrentPosition(
     // ✅ Éxito
@@ -75,22 +107,28 @@ function getUserLocation() {
     },
     // ❌ Error
     (error) => {
-      console.warn("⚠️ Error al obtener ubicación:", error.message);
+      // Solo mostrar alerta si NO es por permisos denegados
+      if (error.code !== 1) {
+        console.warn("⚠️ Error al obtener ubicación:", error.message);
 
-      let errorMsg = "";
-      switch (error.code) {
-        case error.PERMISSION_DENIED:
-          errorMsg = "Permiso de ubicación denegado";
-          break;
-        case error.POSITION_UNAVAILABLE:
-          errorMsg = "Ubicación no disponible";
-          break;
-        case error.TIMEOUT:
-          errorMsg = "Tiempo de espera agotado";
-          break;
+        let errorMsg = "";
+        switch (error.code) {
+          case error.POSITION_UNAVAILABLE:
+            errorMsg = "Ubicación no disponible";
+            break;
+          case error.TIMEOUT:
+            errorMsg = "Tiempo de espera agotado";
+            break;
+        }
+
+        if (errorMsg) {
+          alert(`⚠️ ${errorMsg}. El mapa se mostrará en Bilbao por defecto.`);
+        }
+      } else {
+        console.log(
+          "⚠️ Sin permisos de ubicación, mapa en ubicación por defecto"
+        );
       }
-
-      alert(`⚠️ ${errorMsg}. El mapa se mostrará en Bilbao por defecto.`);
 
       hideLocationLoading();
       isGettingLocation = false;
@@ -257,30 +295,26 @@ async function reverseGeocode(lat, lng) {
   }
 }
 
-// Añadir marcador en el mapa
 function addMapMarker(lat, lng, popupText = null) {
-  // Remover marcador anterior si existe
   if (currentMarker) {
     map.removeLayer(currentMarker);
   }
 
-  // Crear nuevo marcador
-  currentMarker = L.marker([lat, lng], {
-    icon: L.icon({
-      iconUrl:
-        "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-      shadowUrl:
-        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-      shadowSize: [41, 41],
-    }),
-  }).addTo(map);
+  const redIcon = L.icon({
+    iconUrl:
+      "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAzMiIgd2lkdGg9IjI0IiBoZWlnaHQ9IjMyIj48cGF0aCBmaWxsPSIjRUY0NDQ0IiBkPSJNMTIgMEM2LjUgMCAyIDQuNSAyIDEwYzAgNyAxMCAyMiAxMCAyMnMxMC0xNSAxMC0yMmMwLTUuNS00LjUtMTAtMTAtMTB6Ii8+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMCIgcj0iNSIgZmlsbD0id2hpdGUiLz48L3N2Zz4=",
+    iconSize: [24, 32],
+    iconAnchor: [12, 32],
+    popupAnchor: [0, -32],
+  });
+
+  currentMarker = L.marker([lat, lng], { icon: redIcon }).addTo(map);
 
   if (popupText) {
-    currentMarker.bindPopup(`📍 ${popupText}`).openPopup();
+    currentMarker.bindPopup(popupText).openPopup();
   }
+
+  console.log("✅ Marcador rojo añadido en:", lat, lng);
 }
 
 // Centrar mapa en ubicación
@@ -290,7 +324,14 @@ function centerMapOnLocation(lat, lng) {
   }
 }
 
-// Exportar funciones para uso global
+// Exportar funciones para uso global (MOVER AL FINAL)
 window.initializeMap = initializeMap;
 window.centerMapOnLocation = centerMapOnLocation;
 window.addMapMarker = addMapMarker;
+
+// Exportar map dinámicamente - se actualizará cuando se cree
+Object.defineProperty(window, "map", {
+  get() {
+    return map;
+  },
+});
