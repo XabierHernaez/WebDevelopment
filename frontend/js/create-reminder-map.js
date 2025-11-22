@@ -106,7 +106,7 @@ async function getUserLocation() {
       isGettingLocation = false;
     },
     // ❌ Error
-    (error) => {
+    async (error) => {
       // Solo mostrar alerta si NO es por permisos denegados
       if (error.code !== 1) {
         console.warn("⚠️ Error al obtener ubicación:", error.message);
@@ -122,7 +122,11 @@ async function getUserLocation() {
         }
 
         if (errorMsg) {
-          alert(`⚠️ ${errorMsg}. El mapa se mostrará en Bilbao por defecto.`);
+          await showInfo(
+            `${errorMsg}. El mapa se mostrará en Bilbao por defecto.`,
+            "No se pudo obtener ubicación",
+            "📍"
+          );
         }
       } else {
         console.log(

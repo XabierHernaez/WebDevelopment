@@ -27,10 +27,18 @@ const myLocationBtn = document.getElementById("myLocationBtn");
 userName.textContent = currentUser.name;
 
 // Logout
-logoutBtn.addEventListener("click", () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-  window.location.href = "index.html";
+logoutBtn.addEventListener("click", async () => {
+  const confirmed = await showConfirm(
+    "Se cerrará tu sesión actual",
+    "¿Seguro que quieres cerrar sesión?",
+    "🚪"
+  );
+
+  if (confirmed) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "index.html";
+  }
 });
 
 // Abrir modal para nuevo recordatorio
@@ -240,14 +248,24 @@ reminderForm.addEventListener("submit", async (e) => {
     const data = await response.json();
 
     if (data.success) {
-      alert("✅ Recordatorio creado exitosamente");
+      await showSuccess(
+        "Tu recordatorio ha sido creado correctamente",
+        "¡Recordatorio creado!",
+        "✅"
+      );
       window.location.href = "reminders-list.html";
     } else {
-      alert("❌ Error: " + data.message);
+      await showError(
+        data.message || "No se pudo crear el recordatorio",
+        "Error al crear"
+      );
     }
   } catch (error) {
     console.error("Error al crear recordatorio:", error);
-    alert("❌ Error al crear recordatorio");
+    await showError(
+      "Hubo un problema al crear el recordatorio",
+      "Error de conexión"
+    );
   }
 });
 
@@ -275,9 +293,13 @@ async function toggleComplete(id, isCompleted) {
 
 // Eliminar recordatorio
 async function deleteReminder(id) {
-  if (!confirm("¿Estás seguro de que quieres eliminar este recordatorio?")) {
-    return;
-  }
+  const confirmed = await showConfirm(
+    "Esta acción no se puede deshacer",
+    "¿Eliminar este recordatorio?",
+    "🗑️"
+  );
+
+  if (!confirmed) return;
 
   try {
     const response = await fetch(`${API_URL}/reminders/${id}`, {
@@ -291,11 +313,15 @@ async function deleteReminder(id) {
 
     if (data.success) {
       loadReminders();
-      alert("✅ Recordatorio eliminado");
+      await showSuccess(
+        "El recordatorio ha sido eliminado",
+        "Recordatorio eliminado",
+        "✅"
+      );
     }
   } catch (error) {
     console.error("Error al eliminar recordatorio:", error);
-    alert("❌ Error al eliminar recordatorio");
+    await showError("No se pudo eliminar el recordatorio", "Error al eliminar");
   }
 }
 

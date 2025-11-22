@@ -79,7 +79,11 @@ searchBtn.addEventListener("click", async () => {
   const address = reminderAddress.value.trim();
 
   if (!address) {
-    alert("Por favor, introduce una dirección");
+    await showInfo(
+      "Por favor, introduce una dirección",
+      "Dirección requerida",
+      "📍"
+    );
     return;
   }
 
@@ -117,11 +121,19 @@ async function geocodeAddress(address) {
         addMapMarker(lat, lng, display_name);
       }
     } else {
-      alert("❌ No se encontró la ubicación");
+      await showError(
+        "No se encontró la ubicación. Intenta con otra dirección.",
+        "Ubicación no encontrada",
+        "🔍"
+      );
     }
   } catch (error) {
     console.error("Error al geocodificar:", error);
-    alert("❌ Error al buscar la ubicación");
+    await showError(
+      "Hubo un problema al buscar la ubicación. Verifica tu conexión.",
+      "Error de búsqueda",
+      "⚠️"
+    );
   } finally {
     searchBtn.textContent = "🔍 Buscar";
     searchBtn.disabled = false;
@@ -153,8 +165,10 @@ reminderForm.addEventListener("submit", async (e) => {
 
   // Validar según tipo
   if ((type === "location" || type === "both") && !selectedLocation) {
-    alert(
-      "⚠️ Debes seleccionar una ubicación en el mapa o buscar una dirección"
+    await showInfo(
+      "Debes seleccionar una ubicación en el mapa o buscar una dirección",
+      "Ubicación requerida",
+      "📍"
     );
     return;
   }
@@ -167,7 +181,11 @@ reminderForm.addEventListener("submit", async (e) => {
 
   if (type === "datetime" || type === "both") {
     if (!datetime) {
-      alert("⚠️ Debes seleccionar una fecha y hora");
+      await showInfo(
+        "Debes seleccionar una fecha y hora",
+        "Fecha requerida",
+        "📅"
+      );
       return;
     }
     reminderData.datetime = datetime;
@@ -192,18 +210,30 @@ reminderForm.addEventListener("submit", async (e) => {
     if (data.success) {
       // Si tiene ubicación, mostrar mensaje especial
       if (type === "location" || type === "both") {
-        alert(
-          "✅ Recordatorio creado exitosamente\n📍 Se te recordará cuando te acerques al lugar"
+        await showSuccess(
+          "Se te recordará cuando te acerques al lugar indicado",
+          "Recordatorio creado con ubicación",
+          "📍"
         );
       } else {
-        alert("✅ Recordatorio creado exitosamente");
+        await showSuccess(
+          "Tu recordatorio ha sido guardado correctamente",
+          "¡Recordatorio creado!",
+          "✅"
+        );
       }
       window.location.href = "reminders-list.html";
     } else {
-      alert("❌ Error: " + data.message);
+      await showError(
+        data.message || "No se pudo crear el recordatorio",
+        "Error al crear"
+      );
     }
   } catch (error) {
     console.error("Error al crear recordatorio:", error);
-    alert("❌ Error al crear recordatorio");
+    await showError(
+      "Hubo un problema al guardar el recordatorio. Intenta de nuevo.",
+      "Error de conexión"
+    );
   }
 });

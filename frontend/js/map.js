@@ -171,7 +171,7 @@ function centerMap(lat, lng, zoom = 15) {
 }
 
 // Obtener ubicación actual del usuario
-function getMyLocation() {
+async function getMyLocation() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -183,13 +183,21 @@ function getMyLocation() {
 
         console.log("📍 Mi ubicación:", latitude, longitude);
       },
-      (error) => {
+      async (error) => {
         console.error("Error al obtener ubicación:", error);
-        alert("No se pudo obtener tu ubicación");
+        await showError(
+          "No se pudo obtener tu ubicación. Verifica los permisos del navegador.",
+          "Error de ubicación",
+          "📍"
+        );
       }
     );
   } else {
-    alert("Tu navegador no soporta geolocalización");
+    await showError(
+      "Tu navegador no soporta geolocalización",
+      "Navegador incompatible",
+      "⚠️"
+    );
   }
 }
 

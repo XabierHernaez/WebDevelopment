@@ -20,8 +20,14 @@ const calendarBtn = document.getElementById("calendarBtn");
 welcomeMessage.textContent = `Hola, ${currentUser.name} 👋`;
 
 // Logout
-logoutBtn.addEventListener("click", () => {
-  if (confirm("¿Seguro que quieres cerrar sesión?")) {
+logoutBtn.addEventListener("click", async () => {
+  const confirmed = await showConfirm(
+    "Se cerrará tu sesión actual",
+    "¿Seguro que quieres cerrar sesión?",
+    "🚪"
+  );
+
+  if (confirmed) {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     window.location.href = "index.html";
@@ -185,15 +191,22 @@ async function toggleComplete(id, isCompleted) {
     }
   } catch (error) {
     console.error("Error al actualizar:", error);
-    alert("Error al actualizar recordatorio");
+    await showError(
+      "No se pudo actualizar el recordatorio",
+      "Error al actualizar"
+    );
   }
 }
 
 // Eliminar recordatorio
 async function deleteReminder(id) {
-  if (!confirm("¿Eliminar este recordatorio?")) {
-    return;
-  }
+  const confirmed = await showConfirm(
+    "Esta acción no se puede deshacer",
+    "¿Eliminar este recordatorio?",
+    "🗑️"
+  );
+
+  if (!confirmed) return;
 
   try {
     const response = await fetch(`${API_URL}/reminders/${id}`, {
@@ -206,13 +219,24 @@ async function deleteReminder(id) {
     const data = await response.json();
 
     if (data.success) {
+      await showSuccess(
+        "El recordatorio ha sido eliminado",
+        "Recordatorio eliminado",
+        "✅"
+      );
       loadReminders();
     } else {
-      alert("Error al eliminar recordatorio");
+      await showError(
+        "No se pudo eliminar el recordatorio",
+        "Error al eliminar"
+      );
     }
   } catch (error) {
     console.error("Error al eliminar:", error);
-    alert("Error al eliminar recordatorio");
+    await showError(
+      "Hubo un problema al eliminar el recordatorio",
+      "Error de conexión"
+    );
   }
 }
 
