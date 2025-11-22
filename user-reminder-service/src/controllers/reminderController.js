@@ -1,5 +1,11 @@
 const pool = require("../config/database");
 const geoService = require("../services/geoService");
+const {
+  getNextOccurrence,
+  generateOccurrences,
+  isValidPattern,
+  shouldRenew,
+} = require("../utils/recurrenceHelper");
 
 // CREATE - Crear nuevo recordatorio
 const createReminder = async (req, res) => {
@@ -203,7 +209,7 @@ const updateReminder = async (req, res) => {
   try {
     // Verificar que el recordatorio existe y pertenece al usuario
     const checkResult = await pool.query(
-      "SELECT id FROM reminders WHERE id = $1 AND user_id = $2",
+      "SELECT * FROM reminders WHERE id = $1 AND user_id = $2",
       [id, userId]
     );
 
@@ -213,6 +219,8 @@ const updateReminder = async (req, res) => {
         message: "Recordatorio no encontrado",
       });
     }
+
+    const currentReminder = checkResult.rows[0];
 
     // Construir query dinámicamente solo con campos proporcionados
     const updates = [];
@@ -268,10 +276,46 @@ const updateReminder = async (req, res) => {
       values
     );
 
+    const updatedReminder = result.rows[0];
+
+    // ✨ LÓGICA DE RECURRENCIA: Si se completa un recordatorio recurrente, renovarlo
+    if (
+      is_completed === true &&
+      currentReminder.is_recurring &&
+      currentReminder.recurrence_pattern
+    ) {
+      const nextDate = getNextOccurrence(
+        currentReminder.datetime,
+        currentReminder.recurrence_pattern
+      );
+
+      // Actualizar la fecha al próximo ciclo y marcar como no completado
+      await pool.query(
+        `UPDATE reminders 
+         SET datetime = $1, is_completed = false, is_notified = false, updated_at = NOW()
+         WHERE id = $2`,
+        [nextDate, id]
+      );
+
+      // Obtener el recordatorio actualizado
+      const renewedResult = await pool.query(
+        "SELECT * FROM reminders WHERE id = $1",
+        [id]
+      );
+
+      return res.json({
+        success: true,
+        message: "Recordatorio recurrente renovado automáticamente",
+        reminder: renewedResult.rows[0],
+        renewed: true,
+        next_occurrence: nextDate,
+      });
+    }
+
     res.json({
       success: true,
       message: "Recordatorio actualizado exitosamente",
-      reminder: result.rows[0],
+      reminder: updatedReminder,
     });
   } catch (error) {
     console.error("❌ Error al actualizar recordatorio:", error);
@@ -318,10 +362,175 @@ const deleteReminder = async (req, res) => {
   }
 };
 
+// ✨ NUEVO - Activar/actualizar recurrencia
+const setRecurrence = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.userId;
+  const { recurrence_pattern, recurrence_end_date } = req.body;
+
+  try {
+    // Validar patrón
+    if (!isValidPattern(recurrence_pattern)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Patrón de recurrencia inválido. Usa: daily, weekly, monthly, yearly",
+      });
+    }
+
+    // Verificar que el recordatorio existe
+    const checkResult = await pool.query(
+      "SELECT * FROM reminders WHERE id = $1 AND user_id = $2",
+      [id, userId]
+    );
+
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Recordatorio no encontrado",
+      });
+    }
+
+    const reminder = checkResult.rows[0];
+
+    // Validar que tenga fecha/hora
+    if (!reminder.datetime) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Solo se pueden hacer recurrentes recordatorios con fecha y hora",
+      });
+    }
+
+    // Activar recurrencia
+    const result = await pool.query(
+      `UPDATE reminders 
+       SET is_recurring = true, 
+           recurrence_pattern = $1, 
+           recurrence_end_date = $2,
+           updated_at = NOW()
+       WHERE id = $3 AND user_id = $4
+       RETURNING *`,
+      [recurrence_pattern, recurrence_end_date || null, id, userId]
+    );
+
+    res.json({
+      success: true,
+      message: "Recurrencia activada exitosamente",
+      reminder: result.rows[0],
+    });
+  } catch (error) {
+    console.error("❌ Error al activar recurrencia:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error interno del servidor",
+      error: error.message,
+    });
+  }
+};
+
+// ✨ NUEVO - Desactivar recurrencia
+const removeRecurrence = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.userId;
+
+  try {
+    const result = await pool.query(
+      `UPDATE reminders 
+       SET is_recurring = false, 
+           recurrence_pattern = NULL, 
+           recurrence_end_date = NULL,
+           updated_at = NOW()
+       WHERE id = $1 AND user_id = $2
+       RETURNING *`,
+      [id, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Recordatorio no encontrado",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Recurrencia desactivada exitosamente",
+      reminder: result.rows[0],
+    });
+  } catch (error) {
+    console.error("❌ Error al desactivar recurrencia:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error interno del servidor",
+      error: error.message,
+    });
+  }
+};
+
+// ✨ NUEVO - Obtener próximas ocurrencias de un recordatorio recurrente
+const getOccurrences = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.userId;
+  const limit = parseInt(req.query.limit) || 10;
+
+  try {
+    const result = await pool.query(
+      "SELECT * FROM reminders WHERE id = $1 AND user_id = $2",
+      [id, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Recordatorio no encontrado",
+      });
+    }
+
+    const reminder = result.rows[0];
+
+    if (!reminder.is_recurring) {
+      return res.status(400).json({
+        success: false,
+        message: "Este recordatorio no es recurrente",
+      });
+    }
+
+    // Generar próximas ocurrencias
+    const occurrences = generateOccurrences(
+      reminder.datetime,
+      reminder.recurrence_pattern,
+      limit,
+      reminder.recurrence_end_date
+    );
+
+    res.json({
+      success: true,
+      reminder: {
+        id: reminder.id,
+        title: reminder.title,
+        recurrence_pattern: reminder.recurrence_pattern,
+      },
+      occurrences: occurrences,
+      count: occurrences.length,
+    });
+  } catch (error) {
+    console.error("❌ Error al obtener ocurrencias:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error interno del servidor",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createReminder,
   getReminders,
   getReminderById,
   updateReminder,
   deleteReminder,
+  setRecurrence,
+  removeRecurrence,
+  getOccurrences,
 };
