@@ -359,7 +359,7 @@
   }
 }
 
-/* Ocultar marcador de geolocalización por defecto de Leaflet */
+/* Ocultar marcador de geolocalización por defecto de Leaflet
 .leaflet-control-locate-location {
   display: none !important;
 }
@@ -369,6 +369,41 @@
 }
 
 /* Pero mostrar nuestro marcador personalizado */
+/* .user-location-marker {
+  display: block !important;
+} */
+
+/* Animación de pulso para el marcador de ubicación del usuario */
+.user-location-marker {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Ocultar SOLO el control de ubicación de Leaflet */
+.leaflet-control-locate {
+  display: none !important;
+}
+
+/* IMPORTANTE: Permitir que TODOS los marcadores sean visibles */
+.leaflet-marker-icon {
+  display: block !important;
+}
+
+/* El marcador del usuario (azul) debe ser visible */
 .user-location-marker {
   display: block !important;
 }

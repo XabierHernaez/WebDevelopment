@@ -296,16 +296,24 @@ async function reverseGeocode(lat, lng) {
 }
 
 function addMapMarker(lat, lng, popupText = null) {
+  // Remover marcador anterior
   if (currentMarker) {
     map.removeLayer(currentMarker);
   }
 
-  const redIcon = L.icon({
-    iconUrl:
-      "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAzMiIgd2lkdGg9IjI0IiBoZWlnaHQ9IjMyIj48cGF0aCBmaWxsPSIjRUY0NDQ0IiBkPSJNMTIgMEM2LjUgMCAyIDQuNSAyIDEwYzAgNyAxMCAyMiAxMCAyMnMxMC0xNSAxMC0yMmMwLTUuNS00LjUtMTAtMTAtMTB6Ii8+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMCIgcj0iNSIgZmlsbD0id2hpdGUiLz48L3N2Zz4=",
-    iconSize: [24, 32],
-    iconAnchor: [12, 32],
-    popupAnchor: [0, -32],
+  // Icono rojo personalizado con HTML/CSS (no depende de imágenes externas)
+  const redIcon = L.divIcon({
+    className: "custom-red-marker",
+    html: `
+      <svg width="32" height="42" viewBox="0 0 32 42" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 0C7.2 0 0 7.2 0 16c0 11 16 26 16 26s16-15 16-26C32 7.2 24.8 0 16 0z" 
+              fill="#EF4444" stroke="#fff" stroke-width="2"/>
+        <circle cx="16" cy="16" r="6" fill="#fff"/>
+      </svg>
+    `,
+    iconSize: [32, 42],
+    iconAnchor: [16, 42],
+    popupAnchor: [0, -42],
   });
 
   currentMarker = L.marker([lat, lng], { icon: redIcon }).addTo(map);
