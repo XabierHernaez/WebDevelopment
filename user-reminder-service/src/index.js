@@ -27,7 +27,7 @@ app.get("/health", (req, res) => {
 });
 
 // Rutas de usuarios
-app.use("/api/users", userRoutes);
+app.use("/api/auth", userRoutes);
 
 // Rutas de recordatorios
 app.use("/api/reminders", reminderRoutes);

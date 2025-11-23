@@ -1,5 +1,5 @@
 // Configuración de la API
-const API_URL = "http://localhost:3001/api";
+const API_URL = "http://localhost:5000/api";
 
 // Elementos del DOM
 const loginForm = document.getElementById("loginForm");
@@ -14,6 +14,11 @@ showRegisterLink.addEventListener("click", (e) => {
   loginForm.style.display = "none";
   registerForm.style.display = "block";
   authMessage.style.display = "none";
+
+  // ✨ Limpiar campos del registro
+  document.getElementById("registerName").value = "";
+  document.getElementById("registerEmail").value = "";
+  document.getElementById("registerPassword").value = "";
 });
 
 showLoginLink.addEventListener("click", (e) => {
@@ -21,6 +26,9 @@ showLoginLink.addEventListener("click", (e) => {
   registerForm.style.display = "none";
   loginForm.style.display = "block";
   authMessage.style.display = "none";
+
+  // ✨ Limpiar campos del login (excepto si vienen del autocompletado después de registro exitoso)
+  // No limpiamos aquí porque el registro exitoso rellena el email
 });
 
 // Mostrar mensajes
@@ -38,7 +46,7 @@ loginForm.addEventListener("submit", async (e) => {
   const password = document.getElementById("loginPassword").value;
 
   try {
-    const response = await fetch(`${API_URL}/users/login`, {
+    const response = await fetch(`${API_URL}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -82,7 +90,7 @@ registerForm.addEventListener("submit", async (e) => {
   }
 
   try {
-    const response = await fetch(`${API_URL}/users/register`, {
+    const response = await fetch(`${API_URL}/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -87,7 +87,7 @@ async function getUserLocation() {
     (position) => {
       const { latitude, longitude, accuracy } = position.coords;
       console.log("✅ Ubicación obtenida:", latitude, longitude);
-      console.log("📏 Precisión:", Math.round(accuracy), "metros");
+      console.log("🎯 Precisión:", Math.round(accuracy), "metros");
 
       // IMPORTANTE: Centrar mapa inmediatamente
       if (map) {
@@ -261,7 +261,7 @@ function addUserLocationMarker(lat, lng, accuracy = 100) {
 async function onMapClickHandler(e) {
   const { lat, lng } = e.latlng;
 
-  console.log("📍 Click en mapa:", lat, lng);
+  console.log("🗺️ Click en mapa:", lat, lng);
 
   // Añadir marcador
   addMapMarker(lat, lng);
@@ -275,21 +275,25 @@ async function onMapClickHandler(e) {
   }
 }
 
-// Geocodificación inversa (coordenadas → dirección)
+// Geocodificación inversa (coordenadas → dirección) ✨ CORREGIDO
 async function reverseGeocode(lat, lng) {
   try {
-    const response = await fetch("http://localhost:8000/api/reverse-geocode", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ lat, lng }),
-    });
+    // Usar Nominatim de OpenStreetMap para geocodificación inversa
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+      {
+        headers: {
+          Accept: "application/json",
+          "User-Agent": "GeoRemind/1.0",
+        },
+      }
+    );
 
-    const result = await response.json();
+    const data = await response.json();
 
-    if (result.success) {
-      return result.data.display_name;
+    if (data && data.display_name) {
+      console.log("📍 Dirección encontrada:", data.display_name);
+      return data.display_name;
     }
 
     return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;

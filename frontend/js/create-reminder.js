@@ -1,5 +1,5 @@
 // Configuración
-const API_URL = "http://localhost:3001/api";
+const API_URL = "http://localhost:5000/api";
 let token = localStorage.getItem("token");
 let currentUser = JSON.parse(localStorage.getItem("user"));
 
@@ -32,21 +32,23 @@ backBtn.addEventListener("click", () => {
   window.location.href = "reminders-list.html";
 });
 
-// Cambiar campos según tipo de recordatorio
+// Cambiar campos según tipo de recordatorio ✨ ACTUALIZADO
 reminderType.addEventListener("change", () => {
   const type = reminderType.value;
 
   if (type === "datetime") {
     // Solo fecha/hora → Mostrar panel de info
     datetimeGroup.style.display = "block";
+    recurrenceGroup.style.display = "block"; // ✨ Mostrar recurrencia
     locationGroup.style.display = "none";
     infoPanel.style.display = "flex";
     mapContainer.style.display = "none";
     document.getElementById("reminderDatetime").required = true;
     reminderAddress.required = false;
   } else if (type === "location") {
-    // Solo ubicación → Mostrar mapa
+    // Solo ubicación → Mostrar mapa + recurrencia
     datetimeGroup.style.display = "none";
+    recurrenceGroup.style.display = "block"; // ✨ Mostrar recurrencia para ubicación
     locationGroup.style.display = "block";
     infoPanel.style.display = "none";
     mapContainer.style.display = "block";
@@ -62,8 +64,9 @@ reminderType.addEventListener("change", () => {
       }
     }, 150);
   } else if (type === "both") {
-    // Ambos → Mostrar mapa
+    // Ambos → Mostrar mapa + recurrencia
     datetimeGroup.style.display = "block";
+    recurrenceGroup.style.display = "block"; // ✨ Mostrar recurrencia
     locationGroup.style.display = "block";
     infoPanel.style.display = "none";
     mapContainer.style.display = "block";
@@ -97,7 +100,7 @@ async function geocodeAddress(address) {
     searchBtn.textContent = "🔍 Buscando...";
     searchBtn.disabled = true;
 
-    const response = await fetch("http://localhost:8000/api/geocode", {
+    const response = await fetch("http://localhost:5000/api/geocode", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -125,7 +128,7 @@ async function geocodeAddress(address) {
       await showError(
         "No se encontró la ubicación. Intenta con otra dirección.",
         "Ubicación no encontrada",
-        "🔍"
+        "📍"
       );
     }
   } catch (error) {
@@ -155,7 +158,7 @@ window.onMapClick = function (lat, lng, address) {
   showSelectedLocation(address, lat, lng);
 };
 
-// Crear recordatorio
+// Crear recordatorio ✨ ACTUALIZADO CON RECURRENCIA PARA UBICACIÓN
 reminderForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -164,7 +167,7 @@ reminderForm.addEventListener("submit", async (e) => {
   const type = reminderType.value;
   const datetime = document.getElementById("reminderDatetime").value;
 
-  // ✨ OBTENER RECURRENCIA SELECCIONADA
+  // ✨ OBTENER RECURRENCIA SELECCIONADA (PARA TODOS LOS TIPOS)
   const recurrenceValue = document.querySelector(
     'input[name="recurrence"]:checked'
   )?.value;
@@ -185,6 +188,7 @@ reminderForm.addEventListener("submit", async (e) => {
     reminder_type: type,
   };
 
+  // Si tiene fecha/hora
   if (type === "datetime" || type === "both") {
     if (!datetime) {
       await showInfo(
@@ -195,14 +199,15 @@ reminderForm.addEventListener("submit", async (e) => {
       return;
     }
     reminderData.datetime = datetime;
-
-    // ✨ AGREGAR RECURRENCIA SI SE SELECCIONÓ
-    if (recurrenceValue && recurrenceValue !== "none") {
-      reminderData.is_recurring = true;
-      reminderData.recurrence_pattern = recurrenceValue;
-    }
   }
 
+  // ✨ AGREGAR RECURRENCIA PARA CUALQUIER TIPO
+  if (recurrenceValue && recurrenceValue !== "none") {
+    reminderData.is_recurring = true;
+    reminderData.recurrence_pattern = recurrenceValue;
+  }
+
+  // Si tiene ubicación
   if (type === "location" || type === "both") {
     reminderData.address = selectedLocation.address;
   }
@@ -220,19 +225,28 @@ reminderForm.addEventListener("submit", async (e) => {
     const data = await response.json();
 
     if (data.success) {
-      // ✨ MENSAJE ESPECIAL SI ES RECURRENTE
+      // ✨ MENSAJE ESPECIAL SEGÚN CONFIGURACIÓN
+      const patternLabels = {
+        daily: "diariamente",
+        weekly: "semanalmente",
+        monthly: "mensualmente",
+        yearly: "anualmente",
+      };
+
       if (reminderData.is_recurring) {
-        const patternLabels = {
-          daily: "diariamente",
-          weekly: "semanalmente",
-          monthly: "mensualmente",
-          yearly: "anualmente",
-        };
-        await showSuccess(
-          `Este recordatorio se repetirá ${patternLabels[recurrenceValue]}`,
-          "Recordatorio recurrente creado",
-          "🔄"
-        );
+        if (type === "location") {
+          await showSuccess(
+            `Cada vez que te acerques al lugar, se activará ${patternLabels[recurrenceValue]}`,
+            "Recordatorio recurrente por ubicación creado",
+            "🔄📍"
+          );
+        } else {
+          await showSuccess(
+            `Este recordatorio se repetirá ${patternLabels[recurrenceValue]}`,
+            "Recordatorio recurrente creado",
+            "🔄"
+          );
+        }
       } else if (type === "location" || type === "both") {
         await showSuccess(
           "Se te recordará cuando te acerques al lugar indicado",

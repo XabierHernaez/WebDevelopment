@@ -412,15 +412,6 @@ const setRecurrence = async (req, res) => {
 
     const reminder = checkResult.rows[0];
 
-    // Validar que tenga fecha/hora
-    if (!reminder.datetime) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Solo se pueden hacer recurrentes recordatorios con fecha y hora",
-      });
-    }
-
     // Activar recurrencia
     const result = await pool.query(
       `UPDATE reminders 

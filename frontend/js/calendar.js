@@ -1,5 +1,5 @@
 // Configuración
-const API_URL = "http://localhost:3001/api";
+const API_URL = "http://localhost:5000/api";
 let token = localStorage.getItem("token");
 let currentUser = JSON.parse(localStorage.getItem("user"));
 
@@ -51,10 +51,55 @@ dayModal.addEventListener("click", (e) => {
   }
 });
 
-// ✨ NUEVA FUNCIÓN: Generar ocurrencias futuras de un recordatorio recurrente
+// ✨ NUEVA: Generar ocurrencias para recordatorios de ubicación sin fecha (desde hoy)
+function generateLocationOccurrences(reminder, startDate, endDate) {
+  const occurrences = [];
+  let currentDate = new Date(startDate);
+  currentDate.setHours(9, 0, 0, 0); // Hora por defecto: 9:00 AM
+
+  while (currentDate <= endDate) {
+    occurrences.push({
+      ...reminder,
+      datetime: new Date(currentDate).toISOString(),
+      isRecurringOccurrence: true,
+      isLocationOnly: true,
+    });
+
+    // Calcular siguiente día según el patrón
+    switch (reminder.recurrence_pattern) {
+      case "daily":
+        currentDate.setDate(currentDate.getDate() + 1);
+        break;
+
+      case "weekly":
+        currentDate.setDate(currentDate.getDate() + 7);
+        break;
+
+      case "monthly":
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        break;
+
+      case "yearly":
+        currentDate.setFullYear(currentDate.getFullYear() + 1);
+        break;
+
+      default:
+        return [];
+    }
+  }
+
+  return occurrences;
+}
+
+// ✨ ACTUALIZADA: Generar ocurrencias futuras de un recordatorio recurrente
 function generateOccurrences(reminder, startDate, endDate) {
   if (!reminder.is_recurring || !reminder.recurrence_pattern) {
     return [reminder]; // Si no es recurrente, devolver solo el original
+  }
+
+  // ✨ Si es solo ubicación (sin fecha), generar ocurrencias virtuales
+  if (!reminder.datetime && reminder.reminder_type === "location") {
+    return generateLocationOccurrences(reminder, startDate, endDate);
   }
 
   const occurrences = [];
@@ -100,7 +145,7 @@ function generateOccurrences(reminder, startDate, endDate) {
   return occurrences;
 }
 
-// ✨ MODIFICADA: Expandir todos los recordatorios recurrentes
+// ✨ MODIFICADA: Expandir todos los recordatorios recurrentes (incluye ubicación)
 function expandRecurringReminders() {
   expandedReminders = [];
 
@@ -113,8 +158,22 @@ function expandRecurringReminders() {
   endDate.setMonth(endDate.getMonth() + 4);
   endDate.setDate(0);
 
+  // ✨ Para recordatorios de ubicación sin fecha, usar SOLO desde hoy
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   reminders.forEach((reminder) => {
-    if (reminder.datetime) {
+    // ✨ Recordatorios de ubicación recurrentes (sin fecha)
+    if (
+      reminder.reminder_type === "location" &&
+      reminder.is_recurring &&
+      !reminder.datetime
+    ) {
+      const occurrences = generateLocationOccurrences(reminder, today, endDate);
+      expandedReminders.push(...occurrences);
+    }
+    // Recordatorios con fecha (datetime o both)
+    else if (reminder.datetime) {
       const occurrences = generateOccurrences(reminder, startDate, endDate);
       expandedReminders.push(...occurrences);
     }
@@ -137,7 +196,7 @@ async function loadReminders() {
     const data = await response.json();
 
     if (data.success) {
-      reminders = data.reminders.filter((r) => r.datetime); // Solo los que tienen fecha
+      reminders = data.reminders; // ✨ Ya no filtrar solo los que tienen fecha
       expandRecurringReminders(); // ✨ Expandir recurrentes
       renderCalendar();
     }
@@ -247,7 +306,7 @@ function createDayElement(
     dayReminders.slice(0, 3).forEach((reminder) => {
       const dot = document.createElement("div");
 
-      // ✨ Añadir clase especial para recurrentes
+      // ✨ Añadir clase especial para recurrentes y ubicación
       let dotClass = "reminder-dot";
       if (reminder.reminder_type === "location") {
         dotClass += " location";
@@ -313,10 +372,14 @@ function showDayReminders(date, dayReminders) {
   } else {
     modalReminders.innerHTML = dayReminders
       .map((reminder) => {
-        const time = new Date(reminder.datetime).toLocaleTimeString("es-ES", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+        // ✨ Si es solo ubicación, no mostrar hora específica
+        const time = reminder.isLocationOnly
+          ? "Todo el día"
+          : new Date(reminder.datetime).toLocaleTimeString("es-ES", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+
         const typeClass =
           reminder.reminder_type === "location"
             ? "location"

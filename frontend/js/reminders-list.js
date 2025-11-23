@@ -1,5 +1,5 @@
 // Configuración
-const API_URL = "http://localhost:3001/api";
+const API_URL = "http://localhost:5000/api";
 let token = localStorage.getItem("token");
 let currentUser = JSON.parse(localStorage.getItem("user"));
 let reminders = [];
@@ -207,7 +207,7 @@ function renderReminders() {
             </h3>
             <div class="reminder-actions">
               ${
-                reminder.datetime && !reminder.is_completed
+                !reminder.is_completed
                   ? `
                 <button class="btn-action ${
                   reminder.is_recurring ? "recurring-active" : ""
@@ -357,9 +357,13 @@ async function toggleRecurrence(id, isCurrentlyRecurring) {
 }
 
 // Modal de selección de recurrencia
+// Modal de selección de recurrencia
 function showRecurrenceModal(reminderId, reminder) {
   const overlay = document.createElement("div");
   overlay.className = "custom-modal-overlay show";
+
+  // ✨ Determinar si tiene fecha o es solo ubicación
+  const hasDateTime = Boolean(reminder.datetime);
 
   overlay.innerHTML = `
     <div class="custom-modal">
@@ -379,9 +383,11 @@ function showRecurrenceModal(reminderId, reminder) {
               <span class="option-icon">📅</span>
               <span class="option-text">
                 <strong>Diaria</strong>
-                <small>Todos los días a las ${formatTime(
-                  reminder.datetime
-                )}</small>
+                <small>${
+                  hasDateTime
+                    ? `Todos los días a las ${formatTime(reminder.datetime)}`
+                    : "Cada vez que te acerques (diariamente)"
+                }</small>
               </span>
             </span>
           </label>
@@ -392,9 +398,13 @@ function showRecurrenceModal(reminderId, reminder) {
               <span class="option-icon">📆</span>
               <span class="option-text">
                 <strong>Semanal</strong>
-                <small>Cada ${getDayName(reminder.datetime)} a las ${formatTime(
-    reminder.datetime
-  )}</small>
+                <small>${
+                  hasDateTime
+                    ? `Cada ${getDayName(reminder.datetime)} a las ${formatTime(
+                        reminder.datetime
+                      )}`
+                    : "Cada vez que te acerques (semanalmente)"
+                }</small>
               </span>
             </span>
           </label>
@@ -405,9 +415,11 @@ function showRecurrenceModal(reminderId, reminder) {
               <span class="option-icon">🗓️</span>
               <span class="option-text">
                 <strong>Mensual</strong>
-                <small>Día ${getDayNumber(
-                  reminder.datetime
-                )} de cada mes</small>
+                <small>${
+                  hasDateTime
+                    ? `Día ${getDayNumber(reminder.datetime)} de cada mes`
+                    : "Cada vez que te acerques (mensualmente)"
+                }</small>
               </span>
             </span>
           </label>
@@ -418,7 +430,11 @@ function showRecurrenceModal(reminderId, reminder) {
               <span class="option-icon">📖</span>
               <span class="option-text">
                 <strong>Anual</strong>
-                <small>Cada año el ${getFullDate(reminder.datetime)}</small>
+                <small>${
+                  hasDateTime
+                    ? `Cada año el ${getFullDate(reminder.datetime)}`
+                    : "Cada vez que te acerques (anualmente)"
+                }</small>
               </span>
             </span>
           </label>
