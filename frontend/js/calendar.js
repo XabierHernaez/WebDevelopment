@@ -11,6 +11,7 @@ if (!token || !currentUser) {
 // Variables globales
 let currentDate = new Date();
 let reminders = [];
+let expandedReminders = []; // ✨ Array con todas las ocurrencias expandidas
 
 // Elementos del DOM
 const backBtn = document.getElementById("backBtn");
@@ -50,6 +51,80 @@ dayModal.addEventListener("click", (e) => {
   }
 });
 
+// ✨ NUEVA FUNCIÓN: Generar ocurrencias futuras de un recordatorio recurrente
+function generateOccurrences(reminder, startDate, endDate) {
+  if (!reminder.is_recurring || !reminder.recurrence_pattern) {
+    return [reminder]; // Si no es recurrente, devolver solo el original
+  }
+
+  const occurrences = [];
+  let currentOccurrence = new Date(reminder.datetime);
+
+  // Generar ocurrencias hasta 1 año en el futuro
+  const maxDate = new Date(endDate);
+  maxDate.setFullYear(maxDate.getFullYear() + 1);
+
+  while (currentOccurrence <= maxDate) {
+    // Si la ocurrencia está dentro del rango visible, agregarla
+    if (currentOccurrence >= startDate && currentOccurrence <= endDate) {
+      occurrences.push({
+        ...reminder,
+        datetime: new Date(currentOccurrence).toISOString(),
+        isRecurringOccurrence: true, // Marcar como ocurrencia generada
+      });
+    }
+
+    // Calcular siguiente ocurrencia según el patrón
+    switch (reminder.recurrence_pattern) {
+      case "daily":
+        currentOccurrence.setDate(currentOccurrence.getDate() + 1);
+        break;
+
+      case "weekly":
+        currentOccurrence.setDate(currentOccurrence.getDate() + 7);
+        break;
+
+      case "monthly":
+        currentOccurrence.setMonth(currentOccurrence.getMonth() + 1);
+        break;
+
+      case "yearly":
+        currentOccurrence.setFullYear(currentOccurrence.getFullYear() + 1);
+        break;
+
+      default:
+        return [reminder]; // Patrón no reconocido
+    }
+  }
+
+  return occurrences;
+}
+
+// ✨ MODIFICADA: Expandir todos los recordatorios recurrentes
+function expandRecurringReminders() {
+  expandedReminders = [];
+
+  // Calcular rango de fechas (mes actual ± 3 meses para optimizar)
+  const startDate = new Date(currentDate);
+  startDate.setMonth(startDate.getMonth() - 3);
+  startDate.setDate(1);
+
+  const endDate = new Date(currentDate);
+  endDate.setMonth(endDate.getMonth() + 4);
+  endDate.setDate(0);
+
+  reminders.forEach((reminder) => {
+    if (reminder.datetime) {
+      const occurrences = generateOccurrences(reminder, startDate, endDate);
+      expandedReminders.push(...occurrences);
+    }
+  });
+
+  console.log(
+    `📅 Expandidos ${expandedReminders.length} recordatorios (${reminders.length} originales)`
+  );
+}
+
 // Cargar recordatorios
 async function loadReminders() {
   try {
@@ -63,6 +138,7 @@ async function loadReminders() {
 
     if (data.success) {
       reminders = data.reminders.filter((r) => r.datetime); // Solo los que tienen fecha
+      expandRecurringReminders(); // ✨ Expandir recurrentes
       renderCalendar();
     }
   } catch (error) {
@@ -74,6 +150,9 @@ async function loadReminders() {
 function renderCalendar() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
+
+  // ✨ Recalcular ocurrencias al cambiar de mes
+  expandRecurringReminders();
 
   // Actualizar título
   const monthNames = [
@@ -167,13 +246,20 @@ function createDayElement(
 
     dayReminders.slice(0, 3).forEach((reminder) => {
       const dot = document.createElement("div");
-      dot.className = `reminder-dot ${
-        reminder.reminder_type === "location"
-          ? "location"
-          : reminder.reminder_type === "both"
-          ? "both"
-          : ""
-      }`;
+
+      // ✨ Añadir clase especial para recurrentes
+      let dotClass = "reminder-dot";
+      if (reminder.reminder_type === "location") {
+        dotClass += " location";
+      } else if (reminder.reminder_type === "both") {
+        dotClass += " both";
+      }
+
+      if (reminder.is_recurring) {
+        dotClass += " recurring"; // Nueva clase CSS
+      }
+
+      dot.className = dotClass;
       dotsContainer.appendChild(dot);
     });
 
@@ -190,9 +276,9 @@ function createDayElement(
   return dayEl;
 }
 
-// Obtener recordatorios para una fecha
+// ✨ MODIFICADA: Obtener recordatorios para una fecha (usando expandedReminders)
 function getRemindersForDate(date) {
-  return reminders.filter((reminder) => {
+  return expandedReminders.filter((reminder) => {
     if (!reminder.datetime) return false;
     const reminderDate = new Date(reminder.datetime);
     return isSameDay(date, reminderDate);
@@ -238,9 +324,19 @@ function showDayReminders(date, dayReminders) {
             ? "both"
             : "";
 
+        // ✨ Badge de recurrencia
+        const recurrenceBadge = reminder.is_recurring
+          ? `<span class="recurring-badge-modal">${getRecurrenceIcon(
+              reminder.recurrence_pattern
+            )} ${getRecurrenceLabel(reminder.recurrence_pattern)}</span>`
+          : "";
+
         return `
                 <div class="modal-reminder-item ${typeClass}">
-                    <div class="modal-reminder-title">${reminder.title}</div>
+                    <div class="modal-reminder-title">
+                        ${reminder.title}
+                        ${recurrenceBadge}
+                    </div>
                     ${
                       reminder.description
                         ? `<p style="color: #6b7280; margin: 6px 0; font-size: 0.9rem;">${reminder.description}</p>`
@@ -259,6 +355,27 @@ function showDayReminders(date, dayReminders) {
   }
 
   dayModal.style.display = "flex";
+}
+
+// ✨ NUEVAS: Funciones auxiliares para recurrencia
+function getRecurrenceLabel(pattern) {
+  const labels = {
+    daily: "Diaria",
+    weekly: "Semanal",
+    monthly: "Mensual",
+    yearly: "Anual",
+  };
+  return labels[pattern] || pattern;
+}
+
+function getRecurrenceIcon(pattern) {
+  const icons = {
+    daily: "📅",
+    weekly: "📆",
+    monthly: "🗓️",
+    yearly: "📖",
+  };
+  return icons[pattern] || "🔄";
 }
 
 // Inicializar

@@ -330,3 +330,46 @@
   font-weight: 600;
   color: white;
 }
+/* === ESTILOS PARA RECORDATORIOS RECURRENTES EN CALENDARIO === */
+/* Agregar al final de calendar.css */
+
+/* Dots de recordatorios recurrentes - con animación */
+.reminder-dot.recurring {
+  animation: pulse-recurring 2s ease-in-out infinite;
+  border: 2px solid rgba(139, 92, 246, 0.5);
+}
+
+@keyframes pulse-recurring {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0);
+  }
+}
+
+/* Badge de recurrencia en el modal */
+.recurring-badge-modal {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  color: white;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* Título del modal con badge */
+.modal-reminder-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
