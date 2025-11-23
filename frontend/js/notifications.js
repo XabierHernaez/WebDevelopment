@@ -43,13 +43,14 @@ async function checkReminders() {
         if (
           reminder.datetime &&
           !reminder.is_completed &&
-          !reminder.is_notified
+          !reminder.is_notified &&
+          !shownNotifications.has(reminder.id) // ✨ IMPORTANTE: Verificar que no se haya mostrado ya
         ) {
           const reminderTime = new Date(reminder.datetime);
           const diffMinutes = Math.floor((reminderTime - now) / (1000 * 60));
 
           // Si la hora ya pasó o está a punto (0-1 minutos)
-          if (diffMinutes <= 0 && !shownNotifications.has(reminder.id)) {
+          if (diffMinutes <= 0) {
             showNotification(reminder);
             shownNotifications.add(reminder.id);
           }
@@ -93,6 +94,15 @@ function showNotification(reminder) {
                 `
                     : ""
                 }
+                ${
+                  reminder.is_recurring
+                    ? `
+                    <div class="notification-time" style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); color: #6366f1; border: 2px solid #6366f1; margin-top: 10px;">
+                        🔄 Recordatorio recurrente - Se renovará automáticamente
+                    </div>
+                `
+                    : ""
+                }
             </div>
             
             <div class="notification-actions">
@@ -103,7 +113,7 @@ function showNotification(reminder) {
                 </button>
                 <button class="btn-notification btn-accept" data-id="${
                   reminder.id
-                }">
+                }" data-recurring="${reminder.is_recurring || false}">
                     ✅ Aceptar
                 </button>
             </div>
@@ -118,8 +128,9 @@ function showNotification(reminder) {
   }, 10);
 
   // Event listeners para los botones
-  overlay.querySelector(".btn-accept").addEventListener("click", () => {
-    acceptNotification(reminder.id, overlay);
+  overlay.querySelector(".btn-accept").addEventListener("click", (e) => {
+    const isRecurring = e.target.dataset.recurring === "true";
+    acceptNotification(reminder.id, overlay, isRecurring);
   });
 
   overlay.querySelector(".btn-discard").addEventListener("click", () => {
@@ -127,34 +138,90 @@ function showNotification(reminder) {
   });
 }
 
-// Aceptar notificación (marcar como notificado, NO eliminar)
-async function acceptNotification(reminderId, overlay) {
+// Aceptar notificación
+async function acceptNotification(reminderId, overlay, isRecurring) {
   const token = localStorage.getItem("token");
 
   try {
-    const response = await fetch(`${API_URL}/reminders/${reminderId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ is_notified: true }),
-    });
+    if (isRecurring) {
+      // ✨ RECORDATORIO RECURRENTE: Marcar como notificado Y renovar inmediatamente
+      const response = await fetch(`${API_URL}/reminders/${reminderId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          is_notified: true,
+          is_completed: true, // Esto dispara la renovación automática en el backend
+        }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (data.success) {
-      console.log("✅ Recordatorio marcado como notificado");
-      closeNotification(overlay);
+      if (data.success) {
+        console.log("✅ Recordatorio recurrente renovado automáticamente");
 
-      // Recargar lista si estamos en la página de recordatorios
-      if (typeof loadReminders === "function") {
-        loadReminders();
+        // ✨ IMPORTANTE: Remover de la lista de notificaciones mostradas
+        // para que pueda volver a notificar en el próximo ciclo
+        shownNotifications.delete(reminderId);
+
+        // Cerrar overlay ANTES de mostrar el mensaje de éxito
+        closeNotification(overlay);
+
+        if (data.renewed) {
+          await showSuccess(
+            `Próxima vez: ${formatDateTime(data.next_occurrence)}`,
+            "Recordatorio renovado",
+            "🔄"
+          );
+        }
+
+        // Recargar lista si estamos en la página de recordatorios
+        if (typeof loadReminders === "function") {
+          loadReminders();
+        }
+      }
+    } else {
+      // ❌ RECORDATORIO NORMAL: Solo marcar como notificado (se queda amarillo)
+      const response = await fetch(`${API_URL}/reminders/${reminderId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ is_notified: true }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        console.log("✅ Recordatorio marcado como notificado");
+        closeNotification(overlay);
+
+        // Recargar lista si estamos en la página de recordatorios
+        if (typeof loadReminders === "function") {
+          loadReminders();
+        }
       }
     }
   } catch (error) {
     console.error("Error al aceptar notificación:", error);
+    closeNotification(overlay);
   }
+}
+
+// Formatear fecha/hora
+function formatDateTime(dateString) {
+  const date = new Date(dateString);
+  const options = {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+  };
+  return date.toLocaleDateString("es-ES", options);
 }
 
 // Descartar notificación (eliminar recordatorio)
@@ -173,6 +240,10 @@ async function discardNotification(reminderId, overlay) {
 
     if (data.success) {
       console.log("🗑️ Recordatorio eliminado");
+
+      // ✨ Limpiar de la lista de notificaciones mostradas
+      shownNotifications.delete(reminderId);
+
       closeNotification(overlay);
 
       // Recargar lista si estamos en la página de recordatorios
@@ -182,6 +253,7 @@ async function discardNotification(reminderId, overlay) {
     }
   } catch (error) {
     console.error("Error al descartar notificación:", error);
+    closeNotification(overlay);
   }
 }
 
@@ -405,7 +477,6 @@ function startLocationChecking() {
 }
 
 // Verificar recordatorios por ubicación
-// Verificar recordatorios por ubicación
 async function checkLocationReminders() {
   const token = localStorage.getItem("token");
   if (!token) return;
@@ -560,6 +631,15 @@ function showLocationNotification(reminder, distance) {
                         : distance.toFixed(1) + " km"
                     }
                 </div>
+                ${
+                  reminder.is_recurring
+                    ? `
+                    <div class="notification-time" style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); color: #6366f1; border: 2px solid #6366f1; margin-top: 10px;">
+                        🔄 Recordatorio recurrente - Se renovará automáticamente
+                    </div>
+                `
+                    : ""
+                }
             </div>
             
             <div class="notification-actions">
@@ -570,7 +650,7 @@ function showLocationNotification(reminder, distance) {
                 </button>
                 <button class="btn-notification btn-accept" data-id="${
                   reminder.id
-                }">
+                }" data-recurring="${reminder.is_recurring || false}">
                     ✅ Aceptar
                 </button>
             </div>
@@ -581,8 +661,9 @@ function showLocationNotification(reminder, distance) {
 
   setTimeout(() => overlay.classList.add("show"), 10);
 
-  overlay.querySelector(".btn-accept").addEventListener("click", () => {
-    acceptNotification(reminder.id, overlay);
+  overlay.querySelector(".btn-accept").addEventListener("click", (e) => {
+    const isRecurring = e.target.dataset.recurring === "true";
+    acceptNotification(reminder.id, overlay, isRecurring);
   });
 
   overlay.querySelector(".btn-discard").addEventListener("click", () => {

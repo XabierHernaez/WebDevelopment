@@ -9,7 +9,15 @@ const {
 
 // CREATE - Crear nuevo recordatorio
 const createReminder = async (req, res) => {
-  const { title, description, reminder_type, datetime, address } = req.body;
+  const {
+    title,
+    description,
+    reminder_type,
+    datetime,
+    address,
+    is_recurring,
+    recurrence_pattern,
+  } = req.body;
   const userId = req.user.userId; // Del token JWT
 
   try {
@@ -50,6 +58,15 @@ const createReminder = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Los recordatorios de tipo location requieren una dirección",
+      });
+    }
+
+    // ✨ Validar recurrencia si se proporciona
+    if (is_recurring && !isValidPattern(recurrence_pattern)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Patrón de recurrencia inválido. Usa: daily, weekly, monthly, yearly",
       });
     }
 
@@ -96,8 +113,8 @@ const createReminder = async (req, res) => {
 
     // Insertar recordatorio en PostgreSQL
     const result = await pool.query(
-      `INSERT INTO reminders (user_id, title, description, reminder_type, datetime, location_id, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+      `INSERT INTO reminders (user_id, title, description, reminder_type, datetime, location_id, is_recurring, recurrence_pattern, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
        RETURNING *`,
       [
         userId,
@@ -106,6 +123,8 @@ const createReminder = async (req, res) => {
         reminder_type,
         datetime || null,
         locationId,
+        is_recurring || false,
+        recurrence_pattern || null,
       ]
     );
 

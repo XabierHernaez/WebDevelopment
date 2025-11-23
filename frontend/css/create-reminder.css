@@ -1,9 +1,26 @@
 /* === CREAR RECORDATORIO === */
 .create-reminder-page {
   background: #f5f7fa;
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+.header-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  text-align: center;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.header-gradient h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: white;
 }
 
 .header-content-center {
@@ -28,9 +45,9 @@
   background: white;
   color: #667eea;
   border: 2px solid white;
-  padding: 12px 24px;
+  padding: 10px 20px;
   border-radius: 10px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -52,12 +69,14 @@
   margin: 0 auto;
   background: white;
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
 .form-section {
-  padding: 40px;
+  padding: 30px;
   background: white;
   overflow-y: auto;
+  max-height: 100%;
 }
 
 .form-section form {
@@ -65,25 +84,25 @@
 }
 
 .form-group {
-  margin-bottom: 24px;
+  margin-bottom: 18px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: #1f2937;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .form-group input,
 .form-group textarea,
 .form-group select {
   width: 100%;
-  padding: 12px 16px;
+  padding: 10px 14px;
   border: 2px solid #e5e7eb;
   border-radius: 10px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-family: inherit;
   transition: all 0.3s ease;
 }
@@ -98,7 +117,7 @@
 
 .form-group textarea {
   resize: vertical;
-  min-height: 80px;
+  min-height: 70px;
 }
 
 .form-group select {
@@ -168,12 +187,12 @@
 
 .btn-save {
   width: 100%;
-  padding: 16px;
+  padding: 14px;
   background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: white;
   border: none;
   border-radius: 12px;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -193,6 +212,7 @@
   background: #f9fafb;
   border-left: 2px solid #e5e7eb;
   position: relative;
+  overflow: hidden;
 }
 
 .map-placeholder {
@@ -231,7 +251,7 @@
 }
 
 .info-icon {
-  font-size: 4rem;
+  font-size: 3.5rem;
   margin-bottom: 20px;
   animation: float 3s ease-in-out infinite;
 }
@@ -248,14 +268,14 @@
 
 .info-title {
   color: #1f2937;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 600;
   margin-bottom: 16px;
 }
 
 .info-description {
   color: #6b7280;
-  font-size: 1rem;
+  font-size: 0.95rem;
   line-height: 1.6;
   max-width: 400px;
   margin-bottom: 30px;
@@ -297,81 +317,86 @@
   color: #f59e0b;
 }
 
-/* === RESPONSIVE === */
-@media (max-width: 1024px) {
-  .create-container {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 400px;
-  }
-
-  .map-section {
-    border-left: none;
-    border-top: 2px solid #e5e7eb;
-  }
+/* === ESTILOS DE RECURRENCIA EN FORMULARIO === */
+.recurrence-radio-group {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
 }
 
-@media (max-width: 768px) {
-  .form-section {
-    padding: 24px;
-  }
-
-  .header-content-center h1 {
-    font-size: 1.3rem;
-  }
-
-  .btn-back {
-    padding: 8px 16px;
-    font-size: 0.9rem;
-  }
-}
-.header-gradient {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 40px 20px;
-  text-align: center;
-  color: white;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+.recurrence-radio {
+  position: relative;
+  cursor: pointer;
+  display: block;
+  flex: 1;
+  min-width: 65px;
 }
 
-.header-gradient h1 {
-  margin: 0;
-  font-size: 2rem;
-  font-weight: 600;
-  color: white;
+.recurrence-radio input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
 }
 
-/* Animación de pulso para el marcador de ubicación del usuario */
-.user-location-marker {
-  animation: pulse 2s infinite;
+.radio-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 4px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  background: white;
+  transition: all 0.3s ease;
+  min-height: 60px;
 }
 
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 1;
+.recurrence-radio:hover .radio-content {
+  border-color: #6366f1;
+  background: #f9fafb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+}
+
+.recurrence-radio input[type="radio"]:checked + .radio-content {
+  border-color: #6366f1;
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+}
+
+.radio-icon {
+  font-size: 1.4rem;
+  transition: transform 0.3s ease;
+}
+
+.recurrence-radio input[type="radio"]:checked + .radio-content .radio-icon {
+  transform: scale(1.15);
+  animation: bounce 0.5s ease;
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: scale(1.15) translateY(0);
   }
   50% {
-    transform: scale(1.1);
-    opacity: 0.8;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
+    transform: scale(1.15) translateY(-4px);
   }
 }
 
-/* Ocultar marcador de geolocalización por defecto de Leaflet
-.leaflet-control-locate-location {
-  display: none !important;
+.radio-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  transition: color 0.3s ease;
 }
 
-.leaflet-marker-icon.leaflet-zoom-animated.leaflet-interactive {
-  display: none !important;
+.recurrence-radio input[type="radio"]:checked + .radio-content .radio-text {
+  color: #6366f1;
+  font-weight: 700;
 }
-
-/* Pero mostrar nuestro marcador personalizado */
-/* .user-location-marker {
-  display: block !important;
-} */
 
 /* Animación de pulso para el marcador de ubicación del usuario */
 .user-location-marker {
@@ -406,4 +431,53 @@
 /* El marcador del usuario (azul) debe ser visible */
 .user-location-marker {
   display: block !important;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 1024px) {
+  .create-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 400px;
+  }
+
+  .map-section {
+    border-left: none;
+    border-top: 2px solid #e5e7eb;
+  }
+}
+
+@media (max-width: 768px) {
+  .form-section {
+    padding: 20px;
+  }
+
+  .header-content-center h1 {
+    font-size: 1.3rem;
+  }
+
+  .btn-back {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+
+  .recurrence-radio-group {
+    gap: 5px;
+  }
+
+  .recurrence-radio {
+    min-width: 55px;
+  }
+
+  .radio-content {
+    padding: 7px 4px;
+    min-height: 55px;
+  }
+
+  .radio-icon {
+    font-size: 1.2rem;
+  }
+
+  .radio-text {
+    font-size: 0.7rem;
+  }
 }

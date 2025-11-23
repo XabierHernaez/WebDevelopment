@@ -13,6 +13,7 @@ const backBtn = document.getElementById("backBtn");
 const reminderForm = document.getElementById("reminderForm");
 const reminderType = document.getElementById("reminderType");
 const datetimeGroup = document.getElementById("datetimeGroup");
+const recurrenceGroup = document.getElementById("recurrenceGroup");
 const locationGroup = document.getElementById("locationGroup");
 const mapSection = document.getElementById("mapSection");
 const infoPanel = document.getElementById("infoPanel");
@@ -163,6 +164,11 @@ reminderForm.addEventListener("submit", async (e) => {
   const type = reminderType.value;
   const datetime = document.getElementById("reminderDatetime").value;
 
+  // ✨ OBTENER RECURRENCIA SELECCIONADA
+  const recurrenceValue = document.querySelector(
+    'input[name="recurrence"]:checked'
+  )?.value;
+
   // Validar según tipo
   if ((type === "location" || type === "both") && !selectedLocation) {
     await showInfo(
@@ -189,6 +195,12 @@ reminderForm.addEventListener("submit", async (e) => {
       return;
     }
     reminderData.datetime = datetime;
+
+    // ✨ AGREGAR RECURRENCIA SI SE SELECCIONÓ
+    if (recurrenceValue && recurrenceValue !== "none") {
+      reminderData.is_recurring = true;
+      reminderData.recurrence_pattern = recurrenceValue;
+    }
   }
 
   if (type === "location" || type === "both") {
@@ -208,8 +220,20 @@ reminderForm.addEventListener("submit", async (e) => {
     const data = await response.json();
 
     if (data.success) {
-      // Si tiene ubicación, mostrar mensaje especial
-      if (type === "location" || type === "both") {
+      // ✨ MENSAJE ESPECIAL SI ES RECURRENTE
+      if (reminderData.is_recurring) {
+        const patternLabels = {
+          daily: "diariamente",
+          weekly: "semanalmente",
+          monthly: "mensualmente",
+          yearly: "anualmente",
+        };
+        await showSuccess(
+          `Este recordatorio se repetirá ${patternLabels[recurrenceValue]}`,
+          "Recordatorio recurrente creado",
+          "🔄"
+        );
+      } else if (type === "location" || type === "both") {
         await showSuccess(
           "Se te recordará cuando te acerques al lugar indicado",
           "Recordatorio creado con ubicación",
