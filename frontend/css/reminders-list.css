@@ -423,3 +423,215 @@
     font-size: 1.5rem;
   }
 }
+
+/* === BUSCADOR SIMPLE AL LADO DE LOS BOTONES === */
+/* Agregar al final de reminders-list.css */
+
+.search-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-right: 15px;
+}
+
+.btn-search-toggle {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  border: none;
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+}
+
+.btn-search-toggle:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 25px rgba(245, 158, 11, 0.4);
+}
+
+.search-input {
+  position: absolute;
+  right: 60px;
+  width: 0;
+  padding: 14px 40px 14px 0;
+  border: 2px solid #f59e0b;
+  border-radius: 12px;
+  font-size: 1rem;
+  background: white;
+  color: #1f2937;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Estado expandido */
+.search-container.expanded .search-input {
+  width: 280px;
+  padding: 14px 40px 14px 16px;
+  opacity: 1;
+  pointer-events: all;
+}
+
+.search-container.expanded .btn-search-toggle {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+
+/* Botón de limpiar */
+.btn-clear-search {
+  position: absolute;
+  right: 70px;
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.search-container.expanded .btn-clear-search {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.btn-clear-search:hover {
+  color: #ef4444;
+  transform: scale(1.2);
+}
+
+/* Estados visuales */
+.search-container.has-results .search-input {
+  border-color: #10b981;
+  background: #ecfdf5;
+}
+
+.search-container.no-results .search-input {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+/* === MENSAJE DE "SIN RESULTADOS" MEJORADO === */
+/* Reemplazar la sección existente en reminders-list.css */
+
+.no-results-message {
+  text-align: center;
+  padding: 80px 40px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  max-width: 600px;
+  margin: 40px auto;
+  animation: fadeInScale 0.4s ease;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.no-results-icon {
+  font-size: 5rem;
+  margin-bottom: 24px;
+  animation: searchPulse 2s ease-in-out infinite;
+  filter: grayscale(0.3);
+}
+
+@keyframes searchPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+.no-results-message h3 {
+  color: #1f2937;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+}
+
+.no-results-message p {
+  color: #6b7280;
+  font-size: 1.1rem;
+  margin: 0 0 32px 0;
+  line-height: 1.6;
+}
+
+.no-results-message strong {
+  color: #6366f1;
+  font-weight: 600;
+}
+
+.btn-clear-search-big {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  border: none;
+  padding: 16px 40px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-clear-search-big:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 25px rgba(99, 102, 241, 0.4);
+}
+
+.btn-clear-search-big:active {
+  transform: translateY(-1px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .no-results-message {
+    padding: 60px 30px;
+    margin: 20px;
+  }
+
+  .no-results-icon {
+    font-size: 4rem;
+  }
+
+  .no-results-message h3 {
+    font-size: 1.5rem;
+  }
+
+  .no-results-message p {
+    font-size: 1rem;
+  }
+
+  .btn-clear-search-big {
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -3,6 +3,7 @@ const API_URL = "http://localhost:3001/api";
 let token = localStorage.getItem("token");
 let currentUser = JSON.parse(localStorage.getItem("user"));
 let reminders = [];
+let filteredReminders = []; // ✨ Array para recordatorios filtrados
 
 // Verificar autenticación
 if (!token || !currentUser) {
@@ -15,6 +16,12 @@ const newReminderBtn = document.getElementById("newReminderBtn");
 const remindersList = document.getElementById("remindersList");
 const logoutBtn = document.getElementById("logoutBtn");
 const calendarBtn = document.getElementById("calendarBtn");
+
+// ✨ NUEVOS: Elementos del buscador
+const searchContainer = document.getElementById("searchContainer");
+const searchToggleBtn = document.getElementById("searchToggleBtn");
+const searchInput = document.getElementById("searchInput");
+const clearSearchBtn = document.getElementById("clearSearchBtn");
 
 // Mostrar nombre del usuario
 welcomeMessage.textContent = `Hola, ${currentUser.name} 👋`;
@@ -44,6 +51,72 @@ calendarBtn.addEventListener("click", () => {
   window.location.href = "calendar.html";
 });
 
+// ✨ NUEVO: Toggle del buscador
+searchToggleBtn.addEventListener("click", () => {
+  searchContainer.classList.toggle("expanded");
+
+  if (searchContainer.classList.contains("expanded")) {
+    // Expandido - dar foco al input
+    setTimeout(() => {
+      searchInput.focus();
+    }, 300);
+  } else {
+    // Colapsado - limpiar búsqueda
+    clearSearch();
+  }
+});
+
+// ✨ NUEVO: Input de búsqueda en tiempo real
+searchInput.addEventListener("input", (e) => {
+  const searchTerm = e.target.value.trim().toLowerCase();
+
+  if (searchTerm === "") {
+    filteredReminders = [...reminders];
+    searchContainer.classList.remove("has-results", "no-results");
+  } else {
+    filteredReminders = reminders.filter((reminder) => {
+      // Buscar en título, descripción y dirección
+      const titleMatch = reminder.title.toLowerCase().includes(searchTerm);
+      const descMatch =
+        reminder.description?.toLowerCase().includes(searchTerm) || false;
+      const addressMatch =
+        reminder.address?.toLowerCase().includes(searchTerm) || false;
+
+      return titleMatch || descMatch || addressMatch;
+    });
+
+    // Actualizar estado visual
+    if (filteredReminders.length > 0) {
+      searchContainer.classList.add("has-results");
+      searchContainer.classList.remove("no-results");
+    } else {
+      searchContainer.classList.add("no-results");
+      searchContainer.classList.remove("has-results");
+    }
+  }
+
+  renderReminders();
+});
+
+// ✨ NUEVO: Limpiar búsqueda
+clearSearchBtn.addEventListener("click", () => {
+  clearSearch();
+});
+
+function clearSearch() {
+  searchInput.value = "";
+  filteredReminders = [...reminders];
+  searchContainer.classList.remove("has-results", "no-results", "expanded");
+  renderReminders();
+}
+
+// ✨ NUEVO: Cerrar búsqueda con ESC
+searchInput.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    clearSearch();
+  }
+});
+
 // Cargar recordatorios
 async function loadReminders() {
   try {
@@ -57,6 +130,7 @@ async function loadReminders() {
 
     if (data.success) {
       reminders = data.reminders;
+      filteredReminders = [...reminders]; // ✨ Inicializar filtrados
       renderReminders();
     } else {
       remindersList.innerHTML =
@@ -68,20 +142,37 @@ async function loadReminders() {
   }
 }
 
-// Renderizar recordatorios
+// ✨ MODIFICADA: Renderizar recordatorios (usa filteredReminders)
 function renderReminders() {
+  // Si no hay recordatorios en absoluto
   if (reminders.length === 0) {
     remindersList.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon">📝</div>
-                <h3>No tienes recordatorios aún</h3>
-                <p>¡Crea tu primer recordatorio haciendo click en "+ Nuevo Recordatorio"!</p>
-            </div>
-        `;
+      <div class="empty-state">
+        <div class="empty-state-icon">📝</div>
+        <h3>No tienes recordatorios aún</h3>
+        <p>¡Crea tu primer recordatorio haciendo click en "+ Nuevo Recordatorio"!</p>
+      </div>
+    `;
     return;
   }
 
-  remindersList.innerHTML = reminders
+  // Si hay búsqueda activa pero sin resultados
+  if (filteredReminders.length === 0 && searchInput.value.trim() !== "") {
+    remindersList.innerHTML = `
+      <div class="no-results-message">
+        <div class="no-results-icon">🔍</div>
+        <h3>No se encontraron resultados</h3>
+        <p>No hay recordatorios que coincidan con "<strong>${searchInput.value}</strong>"</p>
+        <button class="btn-clear-search-big" onclick="clearSearch()">
+          ✨ Limpiar búsqueda
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  // Renderizar recordatorios filtrados
+  remindersList.innerHTML = filteredReminders
     .map((reminder) => {
       // Determinar clase según tipo
       let typeClass = "";
@@ -105,83 +196,83 @@ function renderReminders() {
         : "";
 
       return `
-            <div class="reminder-item ${typeClass} ${completedClass} ${notifiedClass}" data-id="${
+        <div class="reminder-item ${typeClass} ${completedClass} ${notifiedClass}" data-id="${
         reminder.id
       }">
-                <div class="reminder-header">
-                    <h3 class="reminder-title">
-                        <span class="reminder-emoji">${emoji}</span>
-                        ${reminder.title}
-                        ${recurrenceBadge}
-                    </h3>
-                    <div class="reminder-actions">
-                        ${
-                          reminder.datetime && !reminder.is_completed
-                            ? `
-                            <button class="btn-action ${
-                              reminder.is_recurring ? "recurring-active" : ""
-                            }" 
-                                    onclick="toggleRecurrence(${reminder.id}, ${
-                                reminder.is_recurring
-                              })" 
-                                    title="${
-                                      reminder.is_recurring
-                                        ? "Desactivar recurrencia"
-                                        : "Hacer recurrente"
-                                    }">
-                                🔄
-                            </button>
-                        `
-                            : ""
-                        }
-                        <button class="btn-action" onclick="toggleComplete(${
-                          reminder.id
-                        }, ${!reminder.is_completed})" title="${
+          <div class="reminder-header">
+            <h3 class="reminder-title">
+              <span class="reminder-emoji">${emoji}</span>
+              ${reminder.title}
+              ${recurrenceBadge}
+            </h3>
+            <div class="reminder-actions">
+              ${
+                reminder.datetime && !reminder.is_completed
+                  ? `
+                <button class="btn-action ${
+                  reminder.is_recurring ? "recurring-active" : ""
+                }" 
+                        onclick="toggleRecurrence(${reminder.id}, ${
+                      reminder.is_recurring
+                    })" 
+                        title="${
+                          reminder.is_recurring
+                            ? "Desactivar recurrencia"
+                            : "Hacer recurrente"
+                        }">
+                    🔄
+                </button>
+              `
+                  : ""
+              }
+              <button class="btn-action" onclick="toggleComplete(${
+                reminder.id
+              }, ${!reminder.is_completed})" title="${
         reminder.is_completed ? "Marcar pendiente" : "Completar"
       }">
-                            ${reminder.is_completed ? "↩️" : "✅"}
-                        </button>
-                        <button class="btn-action" onclick="deleteReminder(${
-                          reminder.id
-                        })" title="Eliminar">
-                            🗑️
-                        </button>
-                    </div>
-                </div>
-
-                ${
-                  reminder.description
-                    ? `
-                    <p class="reminder-description">${reminder.description}</p>
-                `
-                    : ""
-                }
-
-                <div class="reminder-meta">
-                    ${
-                      reminder.address
-                        ? `
-                        <div class="meta-item">
-                            <span class="meta-icon">📍</span>
-                            <span>${reminder.address}</span>
-                        </div>
-                    `
-                        : ""
-                    }
-                    
-                    ${
-                      reminder.datetime
-                        ? `
-                        <div class="meta-item">
-                            <span class="meta-icon">📅</span>
-                            <span>${formatDateTime(reminder.datetime)}</span>
-                        </div>
-                    `
-                        : ""
-                    }
-                </div>
+                ${reminder.is_completed ? "↩️" : "✅"}
+              </button>
+              <button class="btn-action" onclick="deleteReminder(${
+                reminder.id
+              })" title="Eliminar">
+                🗑️
+              </button>
             </div>
-        `;
+          </div>
+
+          ${
+            reminder.description
+              ? `
+            <p class="reminder-description">${reminder.description}</p>
+          `
+              : ""
+          }
+
+          <div class="reminder-meta">
+            ${
+              reminder.address
+                ? `
+              <div class="meta-item">
+                <span class="meta-icon">📍</span>
+                <span>${reminder.address}</span>
+              </div>
+            `
+                : ""
+            }
+            
+            ${
+              reminder.datetime
+                ? `
+              <div class="meta-item">
+                <span class="meta-icon">📅</span>
+                <span>${formatDateTime(reminder.datetime)}</span>
+              </div>
+            `
+                : ""
+            }
+          </div>
+        </div>
+      `;
     })
     .join("");
 }
@@ -221,7 +312,7 @@ function getRecurrenceIcon(pattern) {
   return icons[pattern] || "🔄";
 }
 
-// ✨ NUEVA - Activar/desactivar recurrencia
+// Activar/desactivar recurrencia
 async function toggleRecurrence(id, isCurrentlyRecurring) {
   const reminder = reminders.find((r) => r.id === id);
 
@@ -265,7 +356,7 @@ async function toggleRecurrence(id, isCurrentlyRecurring) {
   }
 }
 
-// ✨ NUEVA - Modal de selección de recurrencia
+// Modal de selección de recurrencia
 function showRecurrenceModal(reminderId, reminder) {
   const overlay = document.createElement("div");
   overlay.className = "custom-modal-overlay show";
@@ -367,7 +458,7 @@ function showRecurrenceModal(reminderId, reminder) {
   };
 }
 
-// ✨ NUEVA - Activar recurrencia en el backend
+// Activar recurrencia en el backend
 async function activateRecurrence(reminderId, pattern) {
   try {
     const response = await fetch(
