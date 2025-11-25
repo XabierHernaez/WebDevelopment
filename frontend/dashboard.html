@@ -156,7 +156,18 @@
 
         <!-- Mapa interactivo (cuando es "Por ubicación" o "Ambos") -->
         <div id="mapContainer" class="map-placeholder" style="display: none">
-          <p>🗺️ Mapa Interactivo (Leaflet / Google Maps)</p>
+          <!-- ✨ NUEVO: Buscador de lugares en el mapa -->
+          <div class="map-search-container">
+            <input
+              type="text"
+              id="mapSearchInput"
+              class="map-search-input"
+              placeholder="🔍 Buscar un lugar en el mapa..."
+              autocomplete="off"
+            />
+            <div id="mapSearchResults" class="map-search-results"></div>
+          </div>
+
           <div id="map" class="map-container"></div>
         </div>
       </div>

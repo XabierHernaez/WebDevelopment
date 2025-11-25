@@ -351,3 +351,180 @@ Object.defineProperty(window, "map", {
     return map;
   },
 });
+
+// ========================================
+// BUSCADOR DE LUGARES EN EL MAPA
+// ========================================
+
+let searchTimeout = null;
+const mapSearchInput = document.getElementById("mapSearchInput");
+const mapSearchResults = document.getElementById("mapSearchResults");
+
+// Escuchar input del buscador
+if (mapSearchInput) {
+  mapSearchInput.addEventListener("input", (e) => {
+    const query = e.target.value.trim();
+
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    if (query.length < 3) {
+      hideSearchResults();
+      return;
+    }
+
+    searchTimeout = setTimeout(() => {
+      searchPlaces(query);
+    }, 500);
+  });
+
+  document.addEventListener("click", (e) => {
+    if (
+      !mapSearchInput.contains(e.target) &&
+      !mapSearchResults.contains(e.target)
+    ) {
+      hideSearchResults();
+    }
+  });
+
+  mapSearchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      mapSearchInput.value = "";
+      hideSearchResults();
+    }
+  });
+}
+
+// Buscar lugares con Nominatim
+async function searchPlaces(query) {
+  showLoading();
+
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+        query
+      )}&limit=8&addressdetails=1`,
+      {
+        headers: {
+          Accept: "application/json",
+          "User-Agent": "GeoRemind/1.0",
+        },
+      }
+    );
+
+    const places = await response.json();
+
+    if (places.length === 0) {
+      showNoResults();
+    } else {
+      showResults(places);
+    }
+  } catch (error) {
+    console.error("Error al buscar lugares:", error);
+    showSearchError();
+  }
+}
+
+// Mostrar resultados
+function showResults(places) {
+  mapSearchResults.innerHTML = places
+    .map((place) => {
+      let icon = "📍";
+      if (place.type === "city" || place.type === "town") icon = "🏙️";
+      else if (place.type === "village") icon = "🏘️";
+      else if (place.type === "restaurant" || place.type === "cafe")
+        icon = "🍽️";
+      else if (place.type === "hotel") icon = "🏨";
+      else if (place.type === "shop" || place.type === "mall") icon = "🛍️";
+      else if (place.type === "park") icon = "🌳";
+      else if (place.type === "museum") icon = "🏛️";
+      else if (place.type === "hospital") icon = "🏥";
+      else if (place.type === "school" || place.type === "university")
+        icon = "🎓";
+      else if (place.class === "highway") icon = "🛣️";
+      else if (place.class === "building") icon = "🏢";
+
+      const name = place.name || place.display_name.split(",")[0];
+      const address = place.display_name;
+
+      return `
+        <div class="search-result-item" onclick='selectPlace(${JSON.stringify(
+          place
+        ).replace(/'/g, "&#39;")})'>
+          <div class="result-icon">${icon}</div>
+          <div class="result-content">
+            <div class="result-name">${name}</div>
+            <div class="result-address">${address}</div>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  mapSearchResults.classList.add("show");
+}
+
+// Seleccionar un lugar
+function selectPlace(place) {
+  const lat = parseFloat(place.lat);
+  const lng = parseFloat(place.lon);
+  const address = place.display_name;
+
+  console.log("✅ Lugar seleccionado:", address);
+
+  const reminderAddress = document.getElementById("reminderAddress");
+  if (reminderAddress) {
+    reminderAddress.value = address;
+  }
+
+  if (window.map) {
+    window.map.setView([lat, lng], 16, {
+      animate: true,
+      duration: 1,
+    });
+
+    addMapMarker(lat, lng, address);
+  }
+
+  if (window.onMapClick) {
+    window.onMapClick(lat, lng, address);
+  }
+
+  mapSearchInput.value = "";
+  hideSearchResults();
+}
+
+function showLoading() {
+  mapSearchResults.innerHTML = `
+    <div class="search-loading">
+      <div class="search-loading-spinner"></div>
+      <p style="margin-top: 10px;">Buscando lugares...</p>
+    </div>
+  `;
+  mapSearchResults.classList.add("show");
+}
+
+function showNoResults() {
+  mapSearchResults.innerHTML = `
+    <div class="search-no-results">
+      <div class="search-no-results-icon">🔍</div>
+      <p>No se encontraron lugares</p>
+    </div>
+  `;
+  mapSearchResults.classList.add("show");
+}
+
+function showSearchError() {
+  mapSearchResults.innerHTML = `
+    <div class="search-no-results">
+      <div class="search-no-results-icon">⚠️</div>
+      <p>Error al buscar lugares</p>
+    </div>
+  `;
+  mapSearchResults.classList.add("show");
+}
+
+function hideSearchResults() {
+  mapSearchResults.classList.remove("show");
+}

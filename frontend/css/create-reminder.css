@@ -481,3 +481,250 @@
     font-size: 0.7rem;
   }
 }
+
+/* ========================================
+   BUSCADOR DE LUGARES EN EL MAPA
+   ======================================== */
+
+.map-search-container {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: 90%;
+  max-width: 500px;
+}
+
+.map-search-input {
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  background: white;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.map-search-input:focus {
+  box-shadow: 0 6px 30px rgba(99, 102, 241, 0.3);
+  transform: translateY(-2px);
+}
+
+.map-search-input::placeholder {
+  color: #9ca3af;
+}
+
+.map-search-results {
+  margin-top: 10px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  max-height: 400px;
+  overflow-y: auto;
+  display: none;
+}
+
+.map-search-results.show {
+  display: block;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.search-result-item {
+  padding: 14px 20px;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.search-result-item:hover .result-address {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.result-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.result-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.result-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-address {
+  font-size: 0.85rem;
+  color: #6b7280;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.search-loading {
+  padding: 20px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.search-loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #f3f4f6;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.search-no-results {
+  padding: 30px 20px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.search-no-results-icon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  opacity: 0.5;
+}
+
+.search-no-results p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.map-search-results::-webkit-scrollbar {
+  width: 8px;
+}
+
+.map-search-results::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 10px;
+}
+
+.map-search-results::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+.map-search-results::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+@media (max-width: 768px) {
+  .map-search-container {
+    width: 95%;
+    top: 15px;
+  }
+
+  .map-search-input {
+    padding: 12px 16px;
+    font-size: 0.95rem;
+  }
+
+  .search-result-item {
+    padding: 12px 16px;
+  }
+
+  .map-search-results {
+    max-height: 300px;
+  }
+}
+
+/* ✨ Ocultar botón de localización azul (esquina superior izquierda) */
+.leaflet-top.leaflet-left .leaflet-control {
+  display: none !important;
+}
+
+/* Mantener solo los controles de zoom */
+.leaflet-control-zoom {
+  display: block !important;
+}
+
+/* ✨ FORZAR ocultación del botón azul de localización */
+.leaflet-control-container
+  .leaflet-top.leaflet-left
+  > *:not(.leaflet-control-zoom) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Asegurar que el botón específico se oculte */
+button[title*="ubicación"],
+button[title*="location"],
+.leaflet-bar a[title*="ubicación"],
+.leaflet-bar a[title*="location"] {
+  display: none !important;
+}
+
+/* ✨ SOLUCIÓN DEFINITIVA: Ocultar botón azul pero mantener marcador */
+.leaflet-control-container .leaflet-top.leaflet-left {
+  pointer-events: none;
+}
+
+.leaflet-control-zoom {
+  pointer-events: auto !important;
+}
+
+/* Ocultar específicamente el botón azul de localización */
+.leaflet-top.leaflet-left > div:not(.leaflet-control-zoom),
+.leaflet-top.leaflet-left > a:not(.leaflet-control-zoom a) {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Los marcadores deben ser visibles siempre */
+.leaflet-marker-pane,
+.leaflet-marker-icon,
+.user-location-marker {
+  display: block !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
