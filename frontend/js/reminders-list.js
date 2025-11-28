@@ -143,6 +143,49 @@ async function loadReminders() {
 }
 
 // ✨ MODIFICADA: Renderizar recordatorios (usa filteredReminders)
+// ✨ NUEVA FUNCIÓN: Agrupar recordatorios por fecha de creación
+function groupRemindersByDate(reminders) {
+  const groups = {};
+
+  reminders.forEach((reminder) => {
+    const createdDate = new Date(reminder.created_at);
+    const dateKey = createdDate.toDateString(); // "Thu Nov 28 2024"
+
+    if (!groups[dateKey]) {
+      groups[dateKey] = {
+        date: createdDate,
+        reminders: [],
+      };
+    }
+
+    groups[dateKey].reminders.push(reminder);
+  });
+
+  return groups;
+}
+
+// ✨ NUEVA FUNCIÓN: Formatear fecha del grupo
+function formatGroupDate(date) {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  today.setHours(0, 0, 0, 0);
+  yesterday.setHours(0, 0, 0, 0);
+  const compareDate = new Date(date);
+  compareDate.setHours(0, 0, 0, 0);
+
+  if (compareDate.getTime() === today.getTime()) {
+    return "📅 Hoy";
+  } else if (compareDate.getTime() === yesterday.getTime()) {
+    return "📅 Ayer";
+  } else {
+    const options = { weekday: "long", day: "numeric", month: "long" };
+    return "📅 " + date.toLocaleDateString("es-ES", options);
+  }
+}
+
+// ✨ MODIFICADA: Renderizar recordatorios agrupados por fecha
 function renderReminders() {
   // Si no hay recordatorios en absoluto
   if (reminders.length === 0) {
@@ -171,9 +214,23 @@ function renderReminders() {
     return;
   }
 
-  // Renderizar recordatorios filtrados
-  remindersList.innerHTML = filteredReminders
-    .map((reminder) => {
+  // ✨ AGRUPAR por fecha de creación
+  const grouped = groupRemindersByDate(filteredReminders);
+
+  // Ordenar grupos por fecha (más reciente primero)
+  const sortedGroups = Object.entries(grouped).sort((a, b) => {
+    return b[1].date - a[1].date;
+  });
+
+  // Renderizar grupos
+  let html = "";
+
+  sortedGroups.forEach(([dateKey, group]) => {
+    html += `<div class="date-group-header">${formatGroupDate(
+      group.date
+    )}</div>`;
+
+    group.reminders.forEach((reminder) => {
       // Determinar clase según tipo
       let typeClass = "";
       if (reminder.reminder_type === "location") typeClass = "location";
@@ -195,7 +252,7 @@ function renderReminders() {
           )} ${getRecurrenceLabel(reminder.recurrence_pattern)}</span>`
         : "";
 
-      return `
+      html += `
         <div class="reminder-item ${typeClass} ${completedClass} ${notifiedClass}" data-id="${
         reminder.id
       }">
@@ -273,8 +330,10 @@ function renderReminders() {
           </div>
         </div>
       `;
-    })
-    .join("");
+    });
+  });
+
+  remindersList.innerHTML = html;
 }
 
 // Formatear fecha
