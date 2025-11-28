@@ -412,13 +412,14 @@ const setRecurrence = async (req, res) => {
 
     const reminder = checkResult.rows[0];
 
-    // Activar recurrencia
+    // Activar recurrencia y resetear is_notified
     const result = await pool.query(
       `UPDATE reminders 
        SET is_recurring = true, 
            recurrence_pattern = $1, 
            recurrence_end_date = $2,
-           updated_at = NOW()
+           updated_at = NOW(),
+           is_notified = false
        WHERE id = $3 AND user_id = $4
        RETURNING *`,
       [recurrence_pattern, recurrence_end_date || null, id, userId]

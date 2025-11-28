@@ -553,6 +553,15 @@ async function activateRecurrence(reminderId, pattern) {
 
     const data = await response.json();
 
+    // ✨ DEBUG TEMPORAL - BORRA ESTO DESPUÉS
+    console.log("=== DEBUG RECURRENCIA ===");
+    console.log("📊 Respuesta completa:", data);
+    console.log("🔍 is_notified:", data.reminder?.is_notified);
+    console.log("🔍 is_completed:", data.reminder?.is_completed);
+    console.log("🔍 is_recurring:", data.reminder?.is_recurring);
+    console.log("========================");
+    // FIN DEBUG
+
     if (data.success) {
       await showSuccess(
         `El recordatorio se repetirá ${getRecurrenceLabel(
