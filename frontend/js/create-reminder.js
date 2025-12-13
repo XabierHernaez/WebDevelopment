@@ -8,6 +8,20 @@ if (!token || !currentUser) {
   window.location.href = "index.html";
 }
 
+// Inicializar Quill Editor
+const quill = new Quill("#reminderDescription", {
+  theme: "snow",
+  placeholder: "Detalles adicionales...",
+  modules: {
+    toolbar: [
+      ["bold", "italic", "underline", "strike"],
+      [{ list: "ordered" }, { list: "bullet" }],
+      [{ header: [1, 2, 3, false] }],
+      ["clean"],
+    ],
+  },
+});
+
 // Elementos del DOM
 const backBtn = document.getElementById("backBtn");
 const reminderForm = document.getElementById("reminderForm");
@@ -32,48 +46,42 @@ backBtn.addEventListener("click", () => {
   window.location.href = "reminders-list.html";
 });
 
-// Cambiar campos según tipo de recordatorio ✨ ACTUALIZADO
+// Cambiar campos según tipo de recordatorio
 reminderType.addEventListener("change", () => {
   const type = reminderType.value;
 
   if (type === "datetime") {
-    // Solo fecha/hora → Mostrar panel de info
     datetimeGroup.style.display = "block";
-    recurrenceGroup.style.display = "block"; // ✨ Mostrar recurrencia
+    recurrenceGroup.style.display = "block";
     locationGroup.style.display = "none";
     infoPanel.style.display = "flex";
     mapContainer.style.display = "none";
     document.getElementById("reminderDatetime").required = true;
     reminderAddress.required = false;
   } else if (type === "location") {
-    // Solo ubicación → Mostrar mapa + recurrencia
     datetimeGroup.style.display = "none";
-    recurrenceGroup.style.display = "block"; // ✨ Mostrar recurrencia para ubicación
+    recurrenceGroup.style.display = "block";
     locationGroup.style.display = "block";
     infoPanel.style.display = "none";
     mapContainer.style.display = "block";
     document.getElementById("reminderDatetime").required = false;
     reminderAddress.required = true;
 
-    // Inicializar mapa si no existe
     setTimeout(() => {
       initializeMap();
-      // Forzar que Leaflet recalcule el tamaño
       if (window.map) {
         window.map.invalidateSize();
       }
     }, 150);
   } else if (type === "both") {
-    // Ambos → Mostrar mapa + recurrencia
     datetimeGroup.style.display = "block";
-    recurrenceGroup.style.display = "block"; // ✨ Mostrar recurrencia
+    recurrenceGroup.style.display = "block";
     locationGroup.style.display = "block";
     infoPanel.style.display = "none";
     mapContainer.style.display = "block";
     document.getElementById("reminderDatetime").required = true;
     reminderAddress.required = true;
 
-    // Inicializar mapa si no existe
     setTimeout(() => initializeMap(), 100);
   }
 });
@@ -113,13 +121,10 @@ async function geocodeAddress(address) {
     if (result.success) {
       const { lat, lng, display_name } = result.data;
 
-      // Guardar ubicación seleccionada
       selectedLocation = { lat, lng, address: display_name };
 
-      // Actualizar interfaz
       showSelectedLocation(display_name, lat, lng);
 
-      // Centrar mapa
       if (window.map) {
         centerMapOnLocation(lat, lng);
         addMapMarker(lat, lng, display_name);
@@ -158,21 +163,23 @@ window.onMapClick = function (lat, lng, address) {
   showSelectedLocation(address, lat, lng);
 };
 
-// Crear recordatorio ✨ ACTUALIZADO CON RECURRENCIA PARA UBICACIÓN
+// Crear recordatorio
 reminderForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const title = document.getElementById("reminderTitle").value;
-  const description = document.getElementById("reminderDescription").value;
+
+  // ✨ Obtener contenido de Quill (HTML)
+  const description = quill.root.innerHTML;
+  // Si quieres solo texto plano, usa: quill.getText().trim()
+
   const type = reminderType.value;
   const datetime = document.getElementById("reminderDatetime").value;
 
-  // ✨ OBTENER RECURRENCIA SELECCIONADA (PARA TODOS LOS TIPOS)
   const recurrenceValue = document.querySelector(
     'input[name="recurrence"]:checked'
   )?.value;
 
-  // Validar según tipo
   if ((type === "location" || type === "both") && !selectedLocation) {
     await showInfo(
       "Debes seleccionar una ubicación en el mapa o buscar una dirección",
@@ -184,11 +191,10 @@ reminderForm.addEventListener("submit", async (e) => {
 
   const reminderData = {
     title,
-    description,
+    description: description === "<p><br></p>" ? "" : description, // Quill devuelve esto cuando está vacío
     reminder_type: type,
   };
 
-  // Si tiene fecha/hora
   if (type === "datetime" || type === "both") {
     if (!datetime) {
       await showInfo(
@@ -201,13 +207,11 @@ reminderForm.addEventListener("submit", async (e) => {
     reminderData.datetime = datetime;
   }
 
-  // ✨ AGREGAR RECURRENCIA PARA CUALQUIER TIPO
   if (recurrenceValue && recurrenceValue !== "none") {
     reminderData.is_recurring = true;
     reminderData.recurrence_pattern = recurrenceValue;
   }
 
-  // Si tiene ubicación
   if (type === "location" || type === "both") {
     reminderData.address = selectedLocation.address;
   }
@@ -225,7 +229,6 @@ reminderForm.addEventListener("submit", async (e) => {
     const data = await response.json();
 
     if (data.success) {
-      // ✨ MENSAJE ESPECIAL SEGÚN CONFIGURACIÓN
       const patternLabels = {
         daily: "diariamente",
         weekly: "semanalmente",
