@@ -211,23 +211,7 @@ function addUserLocationMarker(lat, lng, accuracy = 100) {
   // Crear icono azul personalizado con animación
   const blueIcon = L.divIcon({
     className: "user-location-marker",
-    html: `
-            <div style="
-                width: 24px;
-                height: 24px;
-                background: #3b82f6;
-                border: 4px solid white;
-                border-radius: 50%;
-                box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
-                animation: pulse 2s infinite;
-            "></div>
-            <style>
-                @keyframes pulse {
-                    0%, 100% { transform: scale(1); opacity: 1; }
-                    50% { transform: scale(1.2); opacity: 0.7; }
-                }
-            </style>
-        `,
+    html: `<div class="user-location-dot"></div>`,
     iconSize: [24, 24],
     iconAnchor: [12, 12],
   });
