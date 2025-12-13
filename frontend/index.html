@@ -88,6 +88,40 @@
           </p>
         </form>
 
+        <!-- Formulario de Verificación 2FA (oculto por defecto) -->
+        <form id="verifyForm" class="auth-form" style="display: none">
+          <h2>🔐 Verificación</h2>
+
+          <p class="verify-description">
+            Hemos enviado un código de 6 dígitos a<br />
+            <strong id="verifyEmail"></strong>
+          </p>
+
+          <div class="form-group">
+            <label for="verifyCode">Código de verificación</label>
+            <input
+              type="text"
+              id="verifyCode"
+              placeholder="000000"
+              maxlength="6"
+              pattern="[0-9]{6}"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              required
+            />
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            Verificar código
+          </button>
+
+          <div class="verify-actions">
+            <a href="#" id="resendCode">📧 Reenviar código</a>
+            <span class="separator">•</span>
+            <a href="#" id="backToLogin">← Volver al login</a>
+          </div>
+        </form>
+
         <!-- Mensajes de error/éxito -->
         <div id="authMessage" class="message"></div>
       </div>

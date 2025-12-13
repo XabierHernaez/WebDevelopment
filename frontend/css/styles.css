@@ -501,3 +501,57 @@ body {
     display: none;
   }
 }
+/* === VERIFICACIÓN 2FA === */
+.verify-description {
+  text-align: center;
+  color: #6b7280;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.verify-description strong {
+  color: #6366f1;
+}
+
+#verifyCode {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 8px;
+  padding: 15px;
+}
+
+#verifyCode::placeholder {
+  letter-spacing: 8px;
+  color: #d1d5db;
+}
+
+.verify-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  font-size: 0.9rem;
+}
+
+.verify-actions a {
+  color: #6366f1;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.verify-actions a:hover {
+  color: #4f46e5;
+  text-decoration: underline;
+}
+
+.verify-actions .separator {
+  color: #d1d5db;
+}
+
+.message.info {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #1e40af;
+  border: 2px solid #3b82f6;
+}
