@@ -3,7 +3,7 @@ const API_URL = "http://localhost:5000/api";
 let token = localStorage.getItem("token");
 let currentUser = JSON.parse(localStorage.getItem("user"));
 let reminders = [];
-let filteredReminders = []; // ✨ Array para recordatorios filtrados
+let filteredReminders = [];
 
 // Verificar autenticación
 if (!token || !currentUser) {
@@ -17,22 +17,45 @@ const remindersList = document.getElementById("remindersList");
 const logoutBtn = document.getElementById("logoutBtn");
 const calendarBtn = document.getElementById("calendarBtn");
 
-// ✨ NUEVOS: Elementos del buscador
 const searchContainer = document.getElementById("searchContainer");
 const searchToggleBtn = document.getElementById("searchToggleBtn");
 const searchInput = document.getElementById("searchInput");
 const clearSearchBtn = document.getElementById("clearSearchBtn");
 
+// Función para actualizar el saludo
+function updateWelcomeMessage() {
+  const greeting = typeof t === "function" ? t("hello") : "Hola";
+  welcomeMessage.textContent = `${greeting}, ${currentUser.name} 👋`;
+}
+
 // Mostrar nombre del usuario
-welcomeMessage.textContent = `Hola, ${currentUser.name} 👋`;
+updateWelcomeMessage();
+
+// Inicializar traducciones cuando cargue la página
+document.addEventListener("DOMContentLoaded", () => {
+  initLanguageSelector("langContainer");
+  applyTranslations();
+  updateWelcomeMessage();
+});
+
+// Actualizar cuando cambie el idioma
+document.addEventListener("languageChanged", () => {
+  updateWelcomeMessage();
+  renderReminders();
+});
 
 // Logout
 logoutBtn.addEventListener("click", async () => {
-  const confirmed = await showConfirm(
-    "Se cerrará tu sesión actual",
-    "¿Seguro que quieres cerrar sesión?",
-    "🚪"
-  );
+  const title =
+    typeof t === "function"
+      ? t("confirmLogout")
+      : "¿Seguro que quieres cerrar sesión?";
+  const message =
+    typeof t === "function"
+      ? t("sessionWillClose")
+      : "Se cerrará tu sesión actual";
+
+  const confirmed = await showConfirm(message, title, "🚪");
 
   if (confirmed) {
     localStorage.removeItem("token");
@@ -51,22 +74,20 @@ calendarBtn.addEventListener("click", () => {
   window.location.href = "calendar.html";
 });
 
-// ✨ NUEVO: Toggle del buscador
+// Toggle del buscador
 searchToggleBtn.addEventListener("click", () => {
   searchContainer.classList.toggle("expanded");
 
   if (searchContainer.classList.contains("expanded")) {
-    // Expandido - dar foco al input
     setTimeout(() => {
       searchInput.focus();
     }, 300);
   } else {
-    // Colapsado - limpiar búsqueda
     clearSearch();
   }
 });
 
-// ✨ NUEVO: Input de búsqueda en tiempo real
+// Input de búsqueda en tiempo real
 searchInput.addEventListener("input", (e) => {
   const searchTerm = e.target.value.trim().toLowerCase();
 
@@ -75,7 +96,6 @@ searchInput.addEventListener("input", (e) => {
     searchContainer.classList.remove("has-results", "no-results");
   } else {
     filteredReminders = reminders.filter((reminder) => {
-      // Buscar en título, descripción y dirección
       const titleMatch = reminder.title.toLowerCase().includes(searchTerm);
       const descMatch =
         reminder.description?.toLowerCase().includes(searchTerm) || false;
@@ -85,7 +105,6 @@ searchInput.addEventListener("input", (e) => {
       return titleMatch || descMatch || addressMatch;
     });
 
-    // Actualizar estado visual
     if (filteredReminders.length > 0) {
       searchContainer.classList.add("has-results");
       searchContainer.classList.remove("no-results");
@@ -98,7 +117,7 @@ searchInput.addEventListener("input", (e) => {
   renderReminders();
 });
 
-// ✨ NUEVO: Limpiar búsqueda
+// Limpiar búsqueda
 clearSearchBtn.addEventListener("click", () => {
   clearSearch();
 });
@@ -110,7 +129,7 @@ function clearSearch() {
   renderReminders();
 }
 
-// ✨ NUEVO: Cerrar búsqueda con ESC
+// Cerrar búsqueda con ESC
 searchInput.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     clearSearch();
@@ -130,11 +149,14 @@ async function loadReminders() {
 
     if (data.success) {
       reminders = data.reminders;
-      filteredReminders = [...reminders]; // ✨ Inicializar filtrados
+      filteredReminders = [...reminders];
       renderReminders();
     } else {
-      remindersList.innerHTML =
-        '<div class="loading">❌ Error al cargar recordatorios</div>';
+      const errorMsg =
+        typeof t === "function"
+          ? t("loadError")
+          : "❌ Error al cargar recordatorios";
+      remindersList.innerHTML = `<div class="loading">${errorMsg}</div>`;
     }
   } catch (error) {
     console.error("Error al cargar recordatorios:", error);
@@ -142,14 +164,13 @@ async function loadReminders() {
   }
 }
 
-// ✨ MODIFICADA: Renderizar recordatorios (usa filteredReminders)
-// ✨ NUEVA FUNCIÓN: Agrupar recordatorios por fecha de creación
+// Agrupar recordatorios por fecha de creación
 function groupRemindersByDate(reminders) {
   const groups = {};
 
   reminders.forEach((reminder) => {
     const createdDate = new Date(reminder.created_at);
-    const dateKey = createdDate.toDateString(); // "Thu Nov 28 2024"
+    const dateKey = createdDate.toDateString();
 
     if (!groups[dateKey]) {
       groups[dateKey] = {
@@ -164,7 +185,7 @@ function groupRemindersByDate(reminders) {
   return groups;
 }
 
-// ✨ NUEVA FUNCIÓN: Formatear fecha del grupo
+// Formatear fecha del grupo
 function formatGroupDate(date) {
   const today = new Date();
   const yesterday = new Date(today);
@@ -175,25 +196,47 @@ function formatGroupDate(date) {
   const compareDate = new Date(date);
   compareDate.setHours(0, 0, 0, 0);
 
+  const todayText = typeof t === "function" ? t("today") : "📅 Hoy";
+  const yesterdayText = typeof t === "function" ? t("yesterday") : "📅 Ayer";
+  const locale =
+    typeof getLanguage === "function" && getLanguage() === "en"
+      ? "en-US"
+      : "es-ES";
+
   if (compareDate.getTime() === today.getTime()) {
-    return "📅 Hoy";
+    return todayText;
   } else if (compareDate.getTime() === yesterday.getTime()) {
-    return "📅 Ayer";
+    return yesterdayText;
   } else {
     const options = { weekday: "long", day: "numeric", month: "long" };
-    return "📅 " + date.toLocaleDateString("es-ES", options);
+    return "📅 " + date.toLocaleDateString(locale, options);
   }
 }
 
-// ✨ MODIFICADA: Renderizar recordatorios agrupados por fecha
+// Renderizar recordatorios agrupados por fecha
 function renderReminders() {
+  const noRemindersTitle =
+    typeof t === "function" ? t("noReminders") : "No tienes recordatorios aún";
+  const createFirstText =
+    typeof t === "function"
+      ? t("createFirst")
+      : '¡Crea tu primer recordatorio haciendo click en "+ Nuevo Recordatorio"!';
+  const noResultsTitle =
+    typeof t === "function" ? t("noResults") : "No se encontraron resultados";
+  const noMatchText =
+    typeof t === "function"
+      ? t("noMatchFor")
+      : "No hay recordatorios que coincidan con";
+  const clearSearchText =
+    typeof t === "function" ? t("clearSearch") : "✨ Limpiar búsqueda";
+
   // Si no hay recordatorios en absoluto
   if (reminders.length === 0) {
     remindersList.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon">📝</div>
-        <h3>No tienes recordatorios aún</h3>
-        <p>¡Crea tu primer recordatorio haciendo click en "+ Nuevo Recordatorio"!</p>
+        <h3>${noRemindersTitle}</h3>
+        <p>${createFirstText}</p>
       </div>
     `;
     return;
@@ -204,25 +247,22 @@ function renderReminders() {
     remindersList.innerHTML = `
       <div class="no-results-message">
         <div class="no-results-icon">🔍</div>
-        <h3>No se encontraron resultados</h3>
-        <p>No hay recordatorios que coincidan con "<strong>${searchInput.value}</strong>"</p>
+        <h3>${noResultsTitle}</h3>
+        <p>${noMatchText} "<strong>${searchInput.value}</strong>"</p>
         <button class="btn-clear-search-big" onclick="clearSearch()">
-          ✨ Limpiar búsqueda
+          ${clearSearchText}
         </button>
       </div>
     `;
     return;
   }
 
-  // ✨ AGRUPAR por fecha de creación
   const grouped = groupRemindersByDate(filteredReminders);
 
-  // Ordenar grupos por fecha (más reciente primero)
   const sortedGroups = Object.entries(grouped).sort((a, b) => {
     return b[1].date - a[1].date;
   });
 
-  // Renderizar grupos
   let html = "";
 
   sortedGroups.forEach(([dateKey, group]) => {
@@ -231,7 +271,6 @@ function renderReminders() {
     )}</div>`;
 
     group.reminders.forEach((reminder) => {
-      // Determinar clase según tipo
       let typeClass = "";
       if (reminder.reminder_type === "location") typeClass = "location";
       if (reminder.reminder_type === "both") typeClass = "both";
@@ -239,18 +278,28 @@ function renderReminders() {
       const completedClass = reminder.is_completed ? "completed" : "";
       const notifiedClass = reminder.is_notified ? "notified" : "";
 
-      // Emoji según tipo
       let emoji = "📌";
       if (reminder.reminder_type === "location") emoji = "📍";
       if (reminder.reminder_type === "datetime") emoji = "⏰";
       if (reminder.reminder_type === "both") emoji = "⏰📍";
 
-      // Badge de recurrencia
       const recurrenceBadge = reminder.is_recurring
         ? `<span class="recurrence-badge">${getRecurrenceIcon(
             reminder.recurrence_pattern
           )} ${getRecurrenceLabel(reminder.recurrence_pattern)}</span>`
         : "";
+
+      const deactivateText =
+        typeof t === "function"
+          ? t("deactivateRecurrence")
+          : "Desactivar recurrencia";
+      const makeRecurrentText =
+        typeof t === "function" ? t("makeRecurrent") : "Hacer recurrente";
+      const markPendingText =
+        typeof t === "function" ? t("markPending") : "Marcar pendiente";
+      const completeText =
+        typeof t === "function" ? t("complete") : "Completar";
+      const deleteText = typeof t === "function" ? t("delete") : "Eliminar";
 
       html += `
         <div class="reminder-item ${typeClass} ${completedClass} ${notifiedClass}" data-id="${
@@ -274,8 +323,8 @@ function renderReminders() {
                     })" 
                         title="${
                           reminder.is_recurring
-                            ? "Desactivar recurrencia"
-                            : "Hacer recurrente"
+                            ? deactivateText
+                            : makeRecurrentText
                         }">
                     🔄
                 </button>
@@ -285,13 +334,13 @@ function renderReminders() {
               <button class="btn-action" onclick="toggleComplete(${
                 reminder.id
               }, ${!reminder.is_completed})" title="${
-        reminder.is_completed ? "Marcar pendiente" : "Completar"
+        reminder.is_completed ? markPendingText : completeText
       }">
                 ${reminder.is_completed ? "↩️" : "✅"}
               </button>
               <button class="btn-action" onclick="deleteReminder(${
                 reminder.id
-              })" title="Eliminar">
+              })" title="${deleteText}">
                 🗑️
               </button>
             </div>
@@ -299,9 +348,7 @@ function renderReminders() {
 
           ${
             reminder.description
-              ? `
-            <p class="reminder-description">${reminder.description}</p>
-          `
+              ? `<p class="reminder-description">${reminder.description}</p>`
               : ""
           }
 
@@ -339,6 +386,10 @@ function renderReminders() {
 // Formatear fecha
 function formatDateTime(dateString) {
   const date = new Date(dateString);
+  const locale =
+    typeof getLanguage === "function" && getLanguage() === "en"
+      ? "en-US"
+      : "es-ES";
   const options = {
     weekday: "short",
     day: "numeric",
@@ -346,11 +397,14 @@ function formatDateTime(dateString) {
     hour: "2-digit",
     minute: "2-digit",
   };
-  return date.toLocaleDateString("es-ES", options);
+  return date.toLocaleDateString(locale, options);
 }
 
 // Obtener etiqueta de recurrencia
 function getRecurrenceLabel(pattern) {
+  if (typeof t === "function") {
+    return t(pattern);
+  }
   const labels = {
     daily: "Diaria",
     weekly: "Semanal",
@@ -376,12 +430,16 @@ async function toggleRecurrence(id, isCurrentlyRecurring) {
   const reminder = reminders.find((r) => r.id === id);
 
   if (isCurrentlyRecurring) {
-    // Desactivar recurrencia
-    const confirmed = await showConfirm(
-      "El recordatorio dejará de repetirse automáticamente",
-      "¿Desactivar recurrencia?",
-      "🔄"
-    );
+    const title =
+      typeof t === "function"
+        ? t("deactivateRecurrence") + "?"
+        : "¿Desactivar recurrencia?";
+    const message =
+      typeof t === "function"
+        ? t("reminderWillStop")
+        : "El recordatorio dejará de repetirse automáticamente";
+
+    const confirmed = await showConfirm(message, title, "🔄");
 
     if (!confirmed) return;
 
@@ -396,11 +454,15 @@ async function toggleRecurrence(id, isCurrentlyRecurring) {
       const data = await response.json();
 
       if (data.success) {
-        await showSuccess(
-          "El recordatorio ya no se repetirá",
-          "Recurrencia desactivada",
-          "✅"
-        );
+        const successMsg =
+          typeof t === "function"
+            ? t("recurrenceDeactivated")
+            : "El recordatorio ya no se repetirá";
+        const successTitle =
+          typeof t === "function"
+            ? t("recurrenceDeactivatedTitle")
+            : "Recurrencia desactivada";
+        await showSuccess(successMsg, successTitle, "✅");
         loadReminders();
       } else {
         await showError(data.message || "Error al desactivar recurrencia");
@@ -410,25 +472,32 @@ async function toggleRecurrence(id, isCurrentlyRecurring) {
       await showError("No se pudo desactivar la recurrencia");
     }
   } else {
-    // Activar recurrencia - Mostrar modal de selección
     showRecurrenceModal(id, reminder);
   }
 }
 
 // Modal de selección de recurrencia
-// Modal de selección de recurrencia
 function showRecurrenceModal(reminderId, reminder) {
   const overlay = document.createElement("div");
   overlay.className = "custom-modal-overlay show";
 
-  // ✨ Determinar si tiene fecha o es solo ubicación
   const hasDateTime = Boolean(reminder.datetime);
+
+  const makeRecurrentTitle =
+    typeof t === "function" ? t("makeRecurrent") : "Hacer recurrente";
+  const cancelText = typeof t === "function" ? t("cancel") : "Cancelar";
+  const activateText =
+    typeof t === "function" ? t("activateRecurrence") : "Activar recurrencia";
+  const dailyText = typeof t === "function" ? t("daily") : "Diaria";
+  const weeklyText = typeof t === "function" ? t("weekly") : "Semanal";
+  const monthlyText = typeof t === "function" ? t("monthly") : "Mensual";
+  const yearlyText = typeof t === "function" ? t("yearly") : "Anual";
 
   overlay.innerHTML = `
     <div class="custom-modal">
       <div class="custom-modal-header info">
         <div class="custom-modal-icon">🔄</div>
-        <h2>Hacer recurrente</h2>
+        <h2>${makeRecurrentTitle}</h2>
       </div>
       <div class="custom-modal-body">
         <p style="margin-bottom: 20px;">El recordatorio "<strong>${
@@ -441,7 +510,7 @@ function showRecurrenceModal(reminderId, reminder) {
             <span class="option-content">
               <span class="option-icon">📅</span>
               <span class="option-text">
-                <strong>Diaria</strong>
+                <strong>${dailyText}</strong>
                 <small>${
                   hasDateTime
                     ? `Todos los días a las ${formatTime(reminder.datetime)}`
@@ -456,7 +525,7 @@ function showRecurrenceModal(reminderId, reminder) {
             <span class="option-content">
               <span class="option-icon">📆</span>
               <span class="option-text">
-                <strong>Semanal</strong>
+                <strong>${weeklyText}</strong>
                 <small>${
                   hasDateTime
                     ? `Cada ${getDayName(reminder.datetime)} a las ${formatTime(
@@ -473,7 +542,7 @@ function showRecurrenceModal(reminderId, reminder) {
             <span class="option-content">
               <span class="option-icon">🗓️</span>
               <span class="option-text">
-                <strong>Mensual</strong>
+                <strong>${monthlyText}</strong>
                 <small>${
                   hasDateTime
                     ? `Día ${getDayNumber(reminder.datetime)} de cada mes`
@@ -488,7 +557,7 @@ function showRecurrenceModal(reminderId, reminder) {
             <span class="option-content">
               <span class="option-icon">📖</span>
               <span class="option-text">
-                <strong>Anual</strong>
+                <strong>${yearlyText}</strong>
                 <small>${
                   hasDateTime
                     ? `Cada año el ${getFullDate(reminder.datetime)}`
@@ -501,10 +570,10 @@ function showRecurrenceModal(reminderId, reminder) {
       </div>
       <div class="custom-modal-actions">
         <button class="custom-modal-btn secondary" data-action="cancel">
-          Cancelar
+          ${cancelText}
         </button>
         <button class="custom-modal-btn primary" data-action="confirm">
-          Activar recurrencia
+          ${activateText}
         </button>
       </div>
     </div>
@@ -512,7 +581,6 @@ function showRecurrenceModal(reminderId, reminder) {
 
   document.body.appendChild(overlay);
 
-  // Manejar confirmación
   overlay.querySelector('[data-action="confirm"]').onclick = async () => {
     const selectedPattern = overlay.querySelector(
       'input[name="pattern"]:checked'
@@ -521,7 +589,6 @@ function showRecurrenceModal(reminderId, reminder) {
     await activateRecurrence(reminderId, selectedPattern);
   };
 
-  // Manejar cancelación
   overlay.querySelector('[data-action="cancel"]').onclick = () => {
     overlay.remove();
   };
@@ -553,21 +620,15 @@ async function activateRecurrence(reminderId, pattern) {
 
     const data = await response.json();
 
-    // ✨ DEBUG TEMPORAL - BORRA ESTO DESPUÉS
-    console.log("=== DEBUG RECURRENCIA ===");
-    console.log("📊 Respuesta completa:", data);
-    console.log("🔍 is_notified:", data.reminder?.is_notified);
-    console.log("🔍 is_completed:", data.reminder?.is_completed);
-    console.log("🔍 is_recurring:", data.reminder?.is_recurring);
-    console.log("========================");
-    // FIN DEBUG
-
     if (data.success) {
+      const successTitle =
+        typeof t === "function"
+          ? t("recurrenceActivatedTitle")
+          : "Recurrencia activada";
+      const patternLabel = getRecurrenceLabel(pattern).toLowerCase();
       await showSuccess(
-        `El recordatorio se repetirá ${getRecurrenceLabel(
-          pattern
-        ).toLowerCase()}`,
-        "Recurrencia activada",
+        `El recordatorio se repetirá ${patternLabel}`,
+        successTitle,
         "🔄"
       );
       loadReminders();
@@ -583,7 +644,11 @@ async function activateRecurrence(reminderId, pattern) {
 // Utilidades de formato
 function formatTime(datetime) {
   const date = new Date(datetime);
-  return date.toLocaleTimeString("es-ES", {
+  const locale =
+    typeof getLanguage === "function" && getLanguage() === "en"
+      ? "en-US"
+      : "es-ES";
+  return date.toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -591,16 +656,11 @@ function formatTime(datetime) {
 
 function getDayName(datetime) {
   const date = new Date(datetime);
-  const days = [
-    "domingo",
-    "lunes",
-    "martes",
-    "miércoles",
-    "jueves",
-    "viernes",
-    "sábado",
-  ];
-  return days[date.getDay()];
+  const locale =
+    typeof getLanguage === "function" && getLanguage() === "en"
+      ? "en-US"
+      : "es-ES";
+  return date.toLocaleDateString(locale, { weekday: "long" });
 }
 
 function getDayNumber(datetime) {
@@ -610,7 +670,11 @@ function getDayNumber(datetime) {
 
 function getFullDate(datetime) {
   const date = new Date(datetime);
-  return date.toLocaleDateString("es-ES", { day: "numeric", month: "long" });
+  const locale =
+    typeof getLanguage === "function" && getLanguage() === "en"
+      ? "en-US"
+      : "es-ES";
+  return date.toLocaleDateString(locale, { day: "numeric", month: "long" });
 }
 
 // Marcar como completado
@@ -628,7 +692,6 @@ async function toggleComplete(id, isCompleted) {
     const data = await response.json();
 
     if (data.success) {
-      // Si es recurrente y se renovó, mostrar mensaje especial
       if (data.renewed) {
         await showSuccess(
           `Próxima ocurrencia: ${formatDateTime(data.next_occurrence)}`,
@@ -649,11 +712,16 @@ async function toggleComplete(id, isCompleted) {
 
 // Eliminar recordatorio
 async function deleteReminder(id) {
-  const confirmed = await showConfirm(
-    "Esta acción no se puede deshacer",
-    "¿Eliminar este recordatorio?",
-    "🗑️"
-  );
+  const title =
+    typeof t === "function"
+      ? t("confirmDelete")
+      : "¿Eliminar este recordatorio?";
+  const message =
+    typeof t === "function"
+      ? t("actionCantUndo")
+      : "Esta acción no se puede deshacer";
+
+  const confirmed = await showConfirm(message, title, "🗑️");
 
   if (!confirmed) return;
 
@@ -668,11 +736,15 @@ async function deleteReminder(id) {
     const data = await response.json();
 
     if (data.success) {
-      await showSuccess(
-        "El recordatorio ha sido eliminado",
-        "Recordatorio eliminado",
-        "✅"
-      );
+      const successTitle =
+        typeof t === "function"
+          ? t("reminderDeleted")
+          : "Recordatorio eliminado";
+      const successMsg =
+        typeof t === "function"
+          ? t("reminderDeletedDesc")
+          : "El recordatorio ha sido eliminado";
+      await showSuccess(successMsg, successTitle, "✅");
       loadReminders();
     } else {
       await showError(

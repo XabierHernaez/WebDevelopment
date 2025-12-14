@@ -54,7 +54,7 @@ resendCodeLink.addEventListener("click", async (e) => {
 
   if (!pendingVerificationEmail) return;
 
-  showMessage("Reenviando código...", "info");
+  showMessage(t("resendingCode"), "info");
 
   try {
     const response = await fetch(`${API_URL}/auth/resend-code`, {
@@ -68,12 +68,12 @@ resendCodeLink.addEventListener("click", async (e) => {
     const data = await response.json();
 
     if (data.success) {
-      showMessage("✅ Nuevo código enviado a tu email", "success");
+      showMessage(t("newCodeSent"), "success");
     } else {
       showMessage(data.message || "Error al reenviar código", "error");
     }
   } catch (error) {
-    showMessage("Error de conexión con el servidor", "error");
+    showMessage(t("connectionError"), "error");
     console.error("Error:", error);
   }
 });
@@ -93,7 +93,6 @@ function showVerifyForm(email) {
   verifyEmailSpan.textContent = email;
   pendingVerificationEmail = email;
 
-  // Dar foco al input del código
   setTimeout(() => {
     document.getElementById("verifyCode").focus();
   }, 100);
@@ -106,7 +105,7 @@ loginForm.addEventListener("submit", async (e) => {
   const email = document.getElementById("loginEmail").value;
   const password = document.getElementById("loginPassword").value;
 
-  showMessage("Verificando credenciales...", "info");
+  showMessage(t("verifyingCredentials"), "info");
 
   try {
     const response = await fetch(`${API_URL}/auth/login`, {
@@ -120,7 +119,7 @@ loginForm.addEventListener("submit", async (e) => {
     const data = await response.json();
 
     if (data.success && data.requiresVerification) {
-      showMessage("📧 Código enviado a tu email", "success");
+      showMessage(t("codeSent"), "success");
 
       setTimeout(() => {
         showVerifyForm(data.email);
@@ -130,7 +129,7 @@ loginForm.addEventListener("submit", async (e) => {
       showMessage(data.message || "Error al iniciar sesión", "error");
     }
   } catch (error) {
-    showMessage("Error de conexión con el servidor", "error");
+    showMessage(t("connectionError"), "error");
     console.error("Error:", error);
   }
 });
@@ -142,11 +141,11 @@ verifyForm.addEventListener("submit", async (e) => {
   const code = document.getElementById("verifyCode").value;
 
   if (code.length !== 6) {
-    showMessage("El código debe tener 6 dígitos", "error");
+    showMessage(t("codeLength"), "error");
     return;
   }
 
-  showMessage("Verificando código...", "info");
+  showMessage(t("verifyingCode"), "info");
 
   try {
     const response = await fetch(`${API_URL}/auth/verify-code`, {
@@ -166,7 +165,7 @@ verifyForm.addEventListener("submit", async (e) => {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      showMessage("✅ ¡Login exitoso! Redirigiendo...", "success");
+      showMessage(t("loginSuccess"), "success");
 
       setTimeout(() => {
         window.location.href = "reminders-list.html";
@@ -175,7 +174,7 @@ verifyForm.addEventListener("submit", async (e) => {
       showMessage(data.message || "Código incorrecto", "error");
     }
   } catch (error) {
-    showMessage("Error de conexión con el servidor", "error");
+    showMessage(t("connectionError"), "error");
     console.error("Error:", error);
   }
 });
@@ -189,7 +188,7 @@ registerForm.addEventListener("submit", async (e) => {
   const password = document.getElementById("registerPassword").value;
 
   if (password.length < 6) {
-    showMessage("La contraseña debe tener al menos 6 caracteres", "error");
+    showMessage(t("passwordLength"), "error");
     return;
   }
 
@@ -205,7 +204,7 @@ registerForm.addEventListener("submit", async (e) => {
     const data = await response.json();
 
     if (data.success) {
-      showMessage("¡Registro exitoso! Ahora puedes iniciar sesión", "success");
+      showMessage(t("registerSuccess"), "success");
 
       setTimeout(() => {
         registerForm.style.display = "none";
@@ -218,7 +217,7 @@ registerForm.addEventListener("submit", async (e) => {
       showMessage(data.message || "Error al registrarse", "error");
     }
   } catch (error) {
-    showMessage("Error de conexión con el servidor", "error");
+    showMessage(t("connectionError"), "error");
     console.error("Error:", error);
   }
 });
@@ -227,3 +226,14 @@ registerForm.addEventListener("submit", async (e) => {
 if (localStorage.getItem("token")) {
   window.location.href = "reminders-list.html";
 }
+
+// Inicializar traducciones
+document.addEventListener("DOMContentLoaded", () => {
+  initLanguageSelector("langContainer");
+  applyTranslations();
+});
+
+// Escuchar cambios de idioma
+document.addEventListener("languageChanged", () => {
+  // Los elementos estáticos ya se actualizan con applyTranslations()
+});

@@ -11,7 +11,10 @@ if (!token || !currentUser) {
 // Inicializar Quill Editor
 const quill = new Quill("#reminderDescription", {
   theme: "snow",
-  placeholder: "Detalles adicionales...",
+  placeholder:
+    typeof t === "function"
+      ? t("descriptionPlaceholder")
+      : "Detalles adicionales...",
   modules: {
     toolbar: [
       ["bold", "italic", "underline", "strike"],
@@ -40,6 +43,39 @@ const selectedCoords = document.getElementById("selectedCoords");
 
 // Variables globales
 let selectedLocation = null;
+
+// Inicializar traducciones
+document.addEventListener("DOMContentLoaded", () => {
+  initLanguageSelector("langContainer");
+  applyTranslations();
+  updateSelectOptions();
+  updateQuillPlaceholder();
+});
+
+// Actualizar cuando cambie el idioma
+document.addEventListener("languageChanged", () => {
+  updateSelectOptions();
+  updateQuillPlaceholder();
+});
+
+// Actualizar opciones del select
+function updateSelectOptions() {
+  const options = reminderType.querySelectorAll("option");
+  options.forEach((option) => {
+    const key = option.getAttribute("data-i18n");
+    if (key && typeof t === "function") {
+      option.textContent = t(key);
+    }
+  });
+}
+
+// Actualizar placeholder de Quill
+function updateQuillPlaceholder() {
+  if (typeof t === "function") {
+    const placeholder = t("descriptionPlaceholder");
+    quill.root.setAttribute("data-placeholder", placeholder);
+  }
+}
 
 // Volver a la lista
 backBtn.addEventListener("click", () => {
@@ -91,11 +127,13 @@ searchBtn.addEventListener("click", async () => {
   const address = reminderAddress.value.trim();
 
   if (!address) {
-    await showInfo(
-      "Por favor, introduce una dirección",
-      "Dirección requerida",
-      "📍"
-    );
+    const title =
+      typeof t === "function" ? t("addressRequired") : "Dirección requerida";
+    const message =
+      typeof t === "function"
+        ? t("pleaseEnterAddress")
+        : "Por favor, introduce una dirección";
+    await showInfo(message, title, "📍");
     return;
   }
 
@@ -104,8 +142,12 @@ searchBtn.addEventListener("click", async () => {
 
 // Geocodificar dirección
 async function geocodeAddress(address) {
+  const searchingText =
+    typeof t === "function" ? t("searching") : "🔍 Buscando...";
+  const searchText = typeof t === "function" ? t("search") : "🔍 Buscar";
+
   try {
-    searchBtn.textContent = "🔍 Buscando...";
+    searchBtn.textContent = searchingText;
     searchBtn.disabled = true;
 
     const response = await fetch("http://localhost:5000/api/geocode", {
@@ -130,21 +172,27 @@ async function geocodeAddress(address) {
         addMapMarker(lat, lng, display_name);
       }
     } else {
-      await showError(
-        "No se encontró la ubicación. Intenta con otra dirección.",
-        "Ubicación no encontrada",
-        "📍"
-      );
+      const title =
+        typeof t === "function"
+          ? t("locationNotFound")
+          : "Ubicación no encontrada";
+      const message =
+        typeof t === "function"
+          ? t("locationNotFoundDesc")
+          : "No se encontró la ubicación. Intenta con otra dirección.";
+      await showError(message, title, "📍");
     }
   } catch (error) {
     console.error("Error al geocodificar:", error);
-    await showError(
-      "Hubo un problema al buscar la ubicación. Verifica tu conexión.",
-      "Error de búsqueda",
-      "⚠️"
-    );
+    const title =
+      typeof t === "function" ? t("searchError") : "Error de búsqueda";
+    const message =
+      typeof t === "function"
+        ? t("searchErrorDesc")
+        : "Hubo un problema al buscar la ubicación. Verifica tu conexión.";
+    await showError(message, title, "⚠️");
   } finally {
-    searchBtn.textContent = "🔍 Buscar";
+    searchBtn.textContent = searchText;
     searchBtn.disabled = false;
   }
 }
@@ -168,11 +216,7 @@ reminderForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const title = document.getElementById("reminderTitle").value;
-
-  // ✨ Obtener contenido de Quill (HTML)
   const description = quill.root.innerHTML;
-  // Si quieres solo texto plano, usa: quill.getText().trim()
-
   const type = reminderType.value;
   const datetime = document.getElementById("reminderDatetime").value;
 
@@ -181,27 +225,31 @@ reminderForm.addEventListener("submit", async (e) => {
   )?.value;
 
   if ((type === "location" || type === "both") && !selectedLocation) {
-    await showInfo(
-      "Debes seleccionar una ubicación en el mapa o buscar una dirección",
-      "Ubicación requerida",
-      "📍"
-    );
+    const msgTitle =
+      typeof t === "function" ? t("locationRequired") : "Ubicación requerida";
+    const msgDesc =
+      typeof t === "function"
+        ? t("locationRequiredDesc")
+        : "Debes seleccionar una ubicación en el mapa o buscar una dirección";
+    await showInfo(msgDesc, msgTitle, "📍");
     return;
   }
 
   const reminderData = {
     title,
-    description: description === "<p><br></p>" ? "" : description, // Quill devuelve esto cuando está vacío
+    description: description === "<p><br></p>" ? "" : description,
     reminder_type: type,
   };
 
   if (type === "datetime" || type === "both") {
     if (!datetime) {
-      await showInfo(
-        "Debes seleccionar una fecha y hora",
-        "Fecha requerida",
-        "📅"
-      );
+      const msgTitle =
+        typeof t === "function" ? t("dateRequired") : "Fecha requerida";
+      const msgDesc =
+        typeof t === "function"
+          ? t("dateRequiredDesc")
+          : "Debes seleccionar una fecha y hora";
+      await showInfo(msgDesc, msgTitle, "📅");
       return;
     }
     reminderData.datetime = datetime;
@@ -229,52 +277,93 @@ reminderForm.addEventListener("submit", async (e) => {
     const data = await response.json();
 
     if (data.success) {
-      const patternLabels = {
-        daily: "diariamente",
-        weekly: "semanalmente",
-        monthly: "mensualmente",
-        yearly: "anualmente",
+      // Obtener etiquetas de frecuencia traducidas
+      const getPatternLabel = (pattern) => {
+        if (typeof t === "function") {
+          const labels = {
+            daily: t("frequencyDaily"),
+            weekly: t("frequencyWeekly"),
+            monthly: t("frequencyMonthly"),
+            yearly: t("frequencyYearly"),
+          };
+          return labels[pattern] || pattern;
+        }
+        const labels = {
+          daily: "diariamente",
+          weekly: "semanalmente",
+          monthly: "mensualmente",
+          yearly: "anualmente",
+        };
+        return labels[pattern] || pattern;
       };
 
       if (reminderData.is_recurring) {
         if (type === "location") {
-          await showSuccess(
-            `Cada vez que te acerques al lugar, se activará ${patternLabels[recurrenceValue]}`,
-            "Recordatorio recurrente por ubicación creado",
-            "🔄📍"
-          );
+          const msgTitle =
+            typeof t === "function"
+              ? t("recurringLocationCreated")
+              : "Recordatorio recurrente por ubicación creado";
+          const msgDesc =
+            typeof t === "function"
+              ? t("recurringLocationCreatedDesc").replace(
+                  "{frequency}",
+                  getPatternLabel(recurrenceValue)
+                )
+              : `Cada vez que te acerques al lugar, se activará ${getPatternLabel(
+                  recurrenceValue
+                )}`;
+          await showSuccess(msgDesc, msgTitle, "🔄📍");
         } else {
-          await showSuccess(
-            `Este recordatorio se repetirá ${patternLabels[recurrenceValue]}`,
-            "Recordatorio recurrente creado",
-            "🔄"
-          );
+          const msgTitle =
+            typeof t === "function"
+              ? t("recurringCreated")
+              : "Recordatorio recurrente creado";
+          const msgDesc =
+            typeof t === "function"
+              ? t("recurringCreatedDesc").replace(
+                  "{frequency}",
+                  getPatternLabel(recurrenceValue)
+                )
+              : `Este recordatorio se repetirá ${getPatternLabel(
+                  recurrenceValue
+                )}`;
+          await showSuccess(msgDesc, msgTitle, "🔄");
         }
       } else if (type === "location" || type === "both") {
-        await showSuccess(
-          "Se te recordará cuando te acerques al lugar indicado",
-          "Recordatorio creado con ubicación",
-          "📍"
-        );
+        const msgTitle =
+          typeof t === "function"
+            ? t("locationReminderCreated")
+            : "Recordatorio creado con ubicación";
+        const msgDesc =
+          typeof t === "function"
+            ? t("locationReminderCreatedDesc")
+            : "Se te recordará cuando te acerques al lugar indicado";
+        await showSuccess(msgDesc, msgTitle, "📍");
       } else {
-        await showSuccess(
-          "Tu recordatorio ha sido guardado correctamente",
-          "¡Recordatorio creado!",
-          "✅"
-        );
+        const msgTitle =
+          typeof t === "function"
+            ? t("reminderCreated")
+            : "¡Recordatorio creado!";
+        const msgDesc =
+          typeof t === "function"
+            ? t("reminderCreatedDesc")
+            : "Tu recordatorio ha sido guardado correctamente";
+        await showSuccess(msgDesc, msgTitle, "✅");
       }
       window.location.href = "reminders-list.html";
     } else {
-      await showError(
-        data.message || "No se pudo crear el recordatorio",
-        "Error al crear"
-      );
+      const msgTitle =
+        typeof t === "function" ? t("createError") : "Error al crear";
+      await showError(data.message || msgTitle, msgTitle);
     }
   } catch (error) {
     console.error("Error al crear recordatorio:", error);
-    await showError(
-      "Hubo un problema al guardar el recordatorio. Intenta de nuevo.",
-      "Error de conexión"
-    );
+    const msgTitle =
+      typeof t === "function" ? t("connectionError") : "Error de conexión";
+    const msgDesc =
+      typeof t === "function"
+        ? t("saveErrorDesc")
+        : "Hubo un problema al guardar el recordatorio. Intenta de nuevo.";
+    await showError(msgDesc, msgTitle);
   }
 });

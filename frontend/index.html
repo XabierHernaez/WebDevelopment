@@ -11,97 +11,130 @@
   <body class="auth-page">
     <div class="auth-container">
       <div class="auth-card">
+        <!-- Selector de idioma -->
+        <div class="language-selector-container" id="langContainer"></div>
+
         <div class="auth-header">
-          <h1>🗺️ GeoRemind</h1>
-          <p>Recordatorios inteligentes basados en ubicación</p>
+          <h1 data-i18n="appName">🗺️ GeoRemind</h1>
+          <p data-i18n="appSlogan">
+            Recordatorios inteligentes basados en ubicación
+          </p>
         </div>
 
         <!-- Formulario de Login -->
         <form id="loginForm" class="auth-form">
-          <h2>Iniciar Sesión</h2>
+          <h2 data-i18n="login">Iniciar Sesión</h2>
 
           <div class="form-group">
-            <label for="loginEmail">📧 Email</label>
+            <label for="loginEmail" data-i18n="email">📧 Email</label>
             <input
               type="email"
               id="loginEmail"
+              data-i18n-placeholder="emailPlaceholder"
               placeholder="tu@email.com"
               required
             />
           </div>
 
           <div class="form-group">
-            <label for="loginPassword">🔒 Contraseña</label>
+            <label for="loginPassword" data-i18n="password"
+              >🔒 Contraseña</label
+            >
             <input
               type="password"
               id="loginPassword"
+              data-i18n-placeholder="passwordPlaceholder"
               placeholder="Mínimo 6 caracteres"
               required
             />
           </div>
 
-          <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+          <button type="submit" class="btn btn-primary" data-i18n="loginButton">
+            Iniciar Sesión
+          </button>
 
           <p class="switch-form">
-            ¿No tienes cuenta? <a href="#" id="showRegister">Regístrate aquí</a>
+            <span data-i18n="noAccount">¿No tienes cuenta?</span>
+            <a href="#" id="showRegister" data-i18n="registerHere"
+              >Regístrate aquí</a
+            >
           </p>
         </form>
 
-        <!-- Formulario de Registro (oculto por defecto) -->
+        <!-- Formulario de Registro -->
         <form id="registerForm" class="auth-form" style="display: none">
-          <h2>Crear Cuenta</h2>
+          <h2 data-i18n="createAccount">Crear Cuenta</h2>
 
           <div class="form-group">
-            <label for="registerName">👤 Nombre</label>
+            <label for="registerName" data-i18n="name">👤 Nombre</label>
             <input
               type="text"
               id="registerName"
+              data-i18n-placeholder="namePlaceholder"
               placeholder="Tu nombre completo"
               required
             />
           </div>
 
           <div class="form-group">
-            <label for="registerEmail">📧 Email</label>
+            <label for="registerEmail" data-i18n="email">📧 Email</label>
             <input
               type="email"
               id="registerEmail"
+              data-i18n-placeholder="emailPlaceholder"
               placeholder="tu@email.com"
               required
             />
           </div>
 
           <div class="form-group">
-            <label for="registerPassword">🔒 Contraseña</label>
+            <label for="registerPassword" data-i18n="password"
+              >🔒 Contraseña</label
+            >
             <input
               type="password"
               id="registerPassword"
+              data-i18n-placeholder="passwordPlaceholder"
               placeholder="Mínimo 6 caracteres"
               required
             />
           </div>
 
-          <button type="submit" class="btn btn-primary">Registrarse</button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            data-i18n="registerButton"
+          >
+            Registrarse
+          </button>
 
           <p class="switch-form">
-            ¿Ya tienes cuenta? <a href="#" id="showLogin">Inicia sesión aquí</a>
+            <span data-i18n="hasAccount">¿Ya tienes cuenta?</span>
+            <a href="#" id="showLogin" data-i18n="loginHere"
+              >Inicia sesión aquí</a
+            >
           </p>
         </form>
 
-        <!-- Formulario de Verificación 2FA (oculto por defecto) -->
+        <!-- Formulario de Verificación 2FA -->
         <form id="verifyForm" class="auth-form" style="display: none">
-          <h2>🔐 Verificación</h2>
+          <h2 data-i18n="verification">🔐 Verificación</h2>
 
           <p class="verify-description">
-            Hemos enviado un código de 6 dígitos a<br />
+            <span data-i18n="verificationDesc"
+              >Hemos enviado un código de 6 dígitos a</span
+            ><br />
             <strong id="verifyEmail"></strong>
           </p>
 
           <div class="form-group">
-            <label for="verifyCode">Código de verificación</label>
+            <label for="verifyCode" data-i18n="verificationCode"
+              >Código de verificación</label
+            >
             <input
               type="text"
               id="verifyCode"
+              data-i18n-placeholder="verificationPlaceholder"
               placeholder="000000"
               maxlength="6"
               pattern="[0-9]{6}"
@@ -111,14 +144,22 @@
             />
           </div>
 
-          <button type="submit" class="btn btn-primary">
+          <button
+            type="submit"
+            class="btn btn-primary"
+            data-i18n="verifyButton"
+          >
             Verificar código
           </button>
 
           <div class="verify-actions">
-            <a href="#" id="resendCode">📧 Reenviar código</a>
+            <a href="#" id="resendCode" data-i18n="resendCode"
+              >📧 Reenviar código</a
+            >
             <span class="separator">•</span>
-            <a href="#" id="backToLogin">← Volver al login</a>
+            <a href="#" id="backToLogin" data-i18n="backToLogin"
+              >← Volver al login</a
+            >
           </div>
         </form>
 
@@ -127,6 +168,7 @@
       </div>
     </div>
 
+    <script src="js/i18n/translations.js"></script>
     <script src="js/custom-modals.js"></script>
     <script src="js/auth.js"></script>
   </body>

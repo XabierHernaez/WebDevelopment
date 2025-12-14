@@ -13,22 +13,28 @@
     <!-- Header -->
     <header class="header-gradient">
       <div class="header-content-center">
-        <button id="backBtn" class="btn-back-calendar">← Volver</button>
-        <h1>📅 Calendario de Recordatorios</h1>
-        <div></div>
+        <button id="backBtn" class="btn-back-calendar" data-i18n="back">
+          ← Volver
+        </button>
+        <h1 data-i18n="reminderCalendar">📅 Calendario de Recordatorios</h1>
+        <div class="language-selector-container" id="langContainer"></div>
       </div>
     </header>
 
     <div class="calendar-container">
       <!-- Controles del calendario -->
       <div class="calendar-controls">
-        <button id="prevMonthBtn" class="btn-nav">◀ Anterior</button>
+        <button id="prevMonthBtn" class="btn-nav">
+          <span data-i18n="previous">◀ Anterior</span>
+        </button>
         <h2 id="currentMonth">Octubre 2025</h2>
-        <button id="nextMonthBtn" class="btn-nav">Siguiente ▶</button>
+        <button id="nextMonthBtn" class="btn-nav">
+          <span data-i18n="next">Siguiente ▶</span>
+        </button>
       </div>
 
       <!-- Días de la semana -->
-      <div class="calendar-weekdays">
+      <div class="calendar-weekdays" id="weekdaysContainer">
         <div class="weekday">L</div>
         <div class="weekday">M</div>
         <div class="weekday">X</div>
@@ -56,6 +62,8 @@
         </div>
       </div>
     </div>
+
+    <script src="js/i18n/translations.js"></script>
     <script src="js/custom-modals.js"></script>
     <script src="js/calendar.js"></script>
   </body>

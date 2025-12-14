@@ -3,11 +3,13 @@
 // Función para mostrar modal de confirmación
 function showConfirm(message, title = "¿Estás seguro?", icon = "⚠️") {
   return new Promise((resolve) => {
-    // Crear overlay
     const overlay = document.createElement("div");
     overlay.className = "custom-modal-overlay show";
 
-    // Crear modal
+    // Usar traducciones si están disponibles
+    const cancelText = typeof t === "function" ? t("cancel") : "Cancelar";
+    const acceptText = typeof t === "function" ? t("accept") : "Aceptar";
+
     overlay.innerHTML = `
       <div class="custom-modal">
         <div class="custom-modal-header confirm">
@@ -19,10 +21,10 @@ function showConfirm(message, title = "¿Estás seguro?", icon = "⚠️") {
         </div>
         <div class="custom-modal-actions">
           <button class="custom-modal-btn secondary" data-action="cancel">
-            Cancelar
+            ${cancelText}
           </button>
           <button class="custom-modal-btn danger" data-action="confirm">
-            Aceptar
+            ${acceptText}
           </button>
         </div>
       </div>
@@ -30,7 +32,6 @@ function showConfirm(message, title = "¿Estás seguro?", icon = "⚠️") {
 
     document.body.appendChild(overlay);
 
-    // Manejar clics
     overlay.querySelector('[data-action="confirm"]').onclick = () => {
       overlay.remove();
       resolve(true);
@@ -41,7 +42,6 @@ function showConfirm(message, title = "¿Estás seguro?", icon = "⚠️") {
       resolve(false);
     };
 
-    // Cerrar al hacer clic fuera
     overlay.onclick = (e) => {
       if (e.target === overlay) {
         overlay.remove();
@@ -69,11 +69,12 @@ function showInfo(message, title = "Información", icon = "ℹ️") {
 // Función genérica para alertas
 function showAlert(message, title, icon, type = "info") {
   return new Promise((resolve) => {
-    // Crear overlay
     const overlay = document.createElement("div");
     overlay.className = "custom-modal-overlay show";
 
-    // Crear modal
+    // Usar traducciones si están disponibles
+    const okText = typeof t === "function" ? t("understood") : "Entendido";
+
     overlay.innerHTML = `
       <div class="custom-modal">
         <div class="custom-modal-header ${type}">
@@ -85,7 +86,7 @@ function showAlert(message, title, icon, type = "info") {
         </div>
         <div class="custom-modal-actions">
           <button class="custom-modal-btn primary" data-action="ok">
-            Entendido
+            ${okText}
           </button>
         </div>
       </div>
@@ -93,7 +94,6 @@ function showAlert(message, title, icon, type = "info") {
 
     document.body.appendChild(overlay);
 
-    // Cerrar modal
     const closeModal = () => {
       overlay.remove();
       resolve();

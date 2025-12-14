@@ -23,9 +23,9 @@
     <!-- Header -->
     <header class="header-gradient">
       <div class="header-content-center">
-        <button id="backBtn" class="btn-back">← Volver</button>
-        <h1>Crear Nuevo Recordatorio</h1>
-        <div></div>
+        <button id="backBtn" class="btn-back" data-i18n="back">← Volver</button>
+        <h1 data-i18n="createNewReminder">Crear Nuevo Recordatorio</h1>
+        <div class="language-selector-container" id="langContainer"></div>
       </div>
     </header>
 
@@ -34,43 +34,54 @@
       <div class="form-section">
         <form id="reminderForm">
           <div class="form-group">
-            <label for="reminderTitle">Título</label>
+            <label for="reminderTitle" data-i18n="title">Título</label>
             <input
               type="text"
               id="reminderTitle"
+              data-i18n-placeholder="titlePlaceholder"
               placeholder="Ej: Comprar leche"
               required
             />
           </div>
 
           <div class="form-group">
-            <label>Descripción</label>
+            <label data-i18n="description">Descripción</label>
             <div id="reminderDescription"></div>
           </div>
 
           <div class="form-group">
-            <label for="reminderType">Tipo de recordatorio</label>
+            <label for="reminderType" data-i18n="reminderType"
+              >Tipo de recordatorio</label
+            >
             <select id="reminderType" required>
-              <option value="datetime">⏰ Por fecha y hora</option>
-              <option value="location">📍 Por ubicación</option>
-              <option value="both">⏰📍 Ambos</option>
+              <option value="datetime" data-i18n="byDateTime">
+                ⏰ Por fecha y hora
+              </option>
+              <option value="location" data-i18n="byLocation">
+                📍 Por ubicación
+              </option>
+              <option value="both" data-i18n="byBoth">⏰📍 Ambos</option>
             </select>
           </div>
 
           <div class="form-group" id="datetimeGroup">
-            <label for="reminderDatetime">Fecha y hora</label>
+            <label for="reminderDatetime" data-i18n="dateAndTime"
+              >Fecha y hora</label
+            >
             <input type="datetime-local" id="reminderDatetime" />
           </div>
 
           <!-- Campo de recurrencia -->
           <div class="form-group" id="recurrenceGroup">
-            <label>¿Hacer recurrente? 🔄</label>
+            <label data-i18n="makeRecurrentQuestion"
+              >¿Hacer recurrente? 🔄</label
+            >
             <div class="recurrence-radio-group">
               <label class="recurrence-radio">
                 <input type="radio" name="recurrence" value="none" checked />
                 <span class="radio-content">
                   <span class="radio-icon">❌</span>
-                  <span class="radio-text">No</span>
+                  <span class="radio-text" data-i18n="no">No</span>
                 </span>
               </label>
 
@@ -78,7 +89,7 @@
                 <input type="radio" name="recurrence" value="daily" />
                 <span class="radio-content">
                   <span class="radio-icon">📅</span>
-                  <span class="radio-text">Diaria</span>
+                  <span class="radio-text" data-i18n="daily">Diaria</span>
                 </span>
               </label>
 
@@ -86,7 +97,7 @@
                 <input type="radio" name="recurrence" value="weekly" />
                 <span class="radio-content">
                   <span class="radio-icon">📆</span>
-                  <span class="radio-text">Semanal</span>
+                  <span class="radio-text" data-i18n="weekly">Semanal</span>
                 </span>
               </label>
 
@@ -94,7 +105,7 @@
                 <input type="radio" name="recurrence" value="monthly" />
                 <span class="radio-content">
                   <span class="radio-icon">🗓️</span>
-                  <span class="radio-text">Mensual</span>
+                  <span class="radio-text" data-i18n="monthly">Mensual</span>
                 </span>
               </label>
 
@@ -102,20 +113,28 @@
                 <input type="radio" name="recurrence" value="yearly" />
                 <span class="radio-content">
                   <span class="radio-icon">📖</span>
-                  <span class="radio-text">Anual</span>
+                  <span class="radio-text" data-i18n="yearly">Anual</span>
                 </span>
               </label>
             </div>
           </div>
 
           <div class="form-group" id="locationGroup" style="display: none">
-            <label for="reminderAddress">Buscar ubicación</label>
+            <label for="reminderAddress" data-i18n="searchLocation"
+              >Buscar ubicación</label
+            >
             <input
               type="text"
               id="reminderAddress"
+              data-i18n-placeholder="searchLocationPlaceholder"
               placeholder="Busca una dirección o lugar..."
             />
-            <button type="button" id="searchBtn" class="btn-search">
+            <button
+              type="button"
+              id="searchBtn"
+              class="btn-search"
+              data-i18n="search"
+            >
               🔍 Buscar
             </button>
 
@@ -124,13 +143,17 @@
               class="location-info"
               style="display: none"
             >
-              <p class="location-label">📍 Ubicación seleccionada:</p>
+              <p class="location-label" data-i18n="selectedLocation">
+                📍 Ubicación seleccionada:
+              </p>
               <p id="selectedAddress" class="location-address"></p>
               <p id="selectedCoords" class="location-coords"></p>
             </div>
           </div>
 
-          <button type="submit" class="btn-save">Guardar Recordatorio</button>
+          <button type="submit" class="btn-save" data-i18n="saveReminder">
+            Guardar Recordatorio
+          </button>
         </form>
       </div>
 
@@ -139,18 +162,20 @@
         <!-- Panel de información (cuando es "Por fecha") -->
         <div id="infoPanel" class="info-panel">
           <div class="info-icon">⏰</div>
-          <h3 class="info-title">Recordatorio por Fecha y Hora</h3>
-          <p class="info-description">
+          <h3 class="info-title" data-i18n="dateTimeReminder">
+            Recordatorio por Fecha y Hora
+          </h3>
+          <p class="info-description" data-i18n="dateTimeReminderDesc">
             Este recordatorio se activará en la fecha y hora que selecciones.
             Recibirás una notificación para recordarte tu tarea.
           </p>
           <div class="info-tips">
-            <h4>💡 Consejos:</h4>
+            <h4 data-i18n="tips">💡 Consejos:</h4>
             <ul>
-              <li>Sé específico con el título</li>
-              <li>Añade detalles en la descripción</li>
-              <li>Configura la hora con anticipación</li>
-              <li>Marca como completado al terminar</li>
+              <li data-i18n="tip1">Sé específico con el título</li>
+              <li data-i18n="tip2">Añade detalles en la descripción</li>
+              <li data-i18n="tip3">Configura la hora con anticipación</li>
+              <li data-i18n="tip4">Marca como completado al terminar</li>
             </ul>
           </div>
         </div>
@@ -163,6 +188,7 @@
               type="text"
               id="mapSearchInput"
               class="map-search-input"
+              data-i18n-placeholder="searchPlaceOnMap"
               placeholder="🔍 Buscar un lugar en el mapa..."
               autocomplete="off"
             />
@@ -174,6 +200,7 @@
       </div>
     </div>
 
+    <script src="js/i18n/translations.js"></script>
     <script src="js/custom-modals.js"></script>
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

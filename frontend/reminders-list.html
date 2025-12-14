@@ -14,7 +14,8 @@
     <!-- Header -->
     <header class="header-gradient">
       <div class="header-content-center">
-        <h1>📝 Mis Recordatorios</h1>
+        <h1 data-i18n="myReminders">📝 Mis Recordatorios</h1>
+        <div class="language-selector-container" id="langContainer"></div>
       </div>
     </header>
 
@@ -23,7 +24,6 @@
       <div class="welcome-section">
         <h2 id="welcomeMessage">Hola, Usuario 👋</h2>
         <div class="action-buttons">
-          <!-- ✨ AGREGAR ESTO AQUÍ -->
           <div class="search-container" id="searchContainer">
             <button
               class="btn-search-toggle"
@@ -36,6 +36,7 @@
               type="text"
               class="search-input"
               id="searchInput"
+              data-i18n-placeholder="searchPlaceholder"
               placeholder="Buscar recordatorios..."
             />
             <button
@@ -46,12 +47,19 @@
               ✕
             </button>
           </div>
-          <!-- ✨ FIN -->
 
-          <button id="calendarBtn" class="btn-calendar">
+          <button
+            id="calendarBtn"
+            class="btn-calendar"
+            data-i18n="viewCalendar"
+          >
             📅 Ver Calendario
           </button>
-          <button id="newReminderBtn" class="btn-new-reminder">
+          <button
+            id="newReminderBtn"
+            class="btn-new-reminder"
+            data-i18n="newReminder"
+          >
             + Nuevo Recordatorio
           </button>
         </div>
@@ -59,15 +67,21 @@
 
       <!-- Lista de recordatorios -->
       <div class="reminders-container" id="remindersList">
-        <div class="loading">Cargando recordatorios...</div>
+        <div class="loading" data-i18n="loading">Cargando recordatorios...</div>
       </div>
     </div>
 
     <!-- Botón flotante de cerrar sesión -->
-    <button id="logoutBtn" class="btn-floating" title="Cerrar Sesión">
+    <button
+      id="logoutBtn"
+      class="btn-floating"
+      data-i18n-title="logout"
+      title="Cerrar Sesión"
+    >
       🚪
     </button>
 
+    <script src="js/i18n/translations.js"></script>
     <script src="js/custom-modals.js"></script>
     <script src="js/reminders-list.js"></script>
     <script src="js/notifications.js"></script>

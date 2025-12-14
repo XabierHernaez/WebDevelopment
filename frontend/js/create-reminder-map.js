@@ -2,12 +2,12 @@
 let map = null;
 let currentMarker = null;
 let userLocationMarker = null;
-let isGettingLocation = false; // Para controlar el estado
+let isGettingLocation = false;
 
 // Nueva función: Verificar permisos sin pedirlos
 async function checkMapPermissions() {
   if (!navigator.permissions) {
-    return true; // Si no se puede verificar, intentar de todas formas
+    return true;
   }
 
   try {
@@ -15,19 +15,16 @@ async function checkMapPermissions() {
     return result.state === "granted";
   } catch (error) {
     console.log("No se pudo verificar permisos");
-    return true; // En caso de error, intentar
+    return true;
   }
 }
 
 // Inicializar mapa
 function initializeMap() {
-  // Si ya existe, no recrear
   if (map) return;
 
-  // Centro temporal en Bilbao (mientras se obtiene ubicación real)
   const bilbaoCoords = [43.263, -2.935];
 
-  // IMPORTANTE: Configurar rutas de iconos de Leaflet
   delete L.Icon.Default.prototype._getIconUrl;
   L.Icon.Default.mergeOptions({
     iconRetinaUrl:
@@ -38,26 +35,21 @@ function initializeMap() {
       "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
   });
 
-  // Crear mapa
   map = L.map("map").setView(bilbaoCoords, 13);
 
-  // Añadir capa de tiles de OpenStreetMap
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "© OpenStreetMap contributors",
     maxZoom: 19,
   }).addTo(map);
 
-  // Click en el mapa para seleccionar ubicación
   map.on("click", onMapClickHandler);
 
   console.log("✅ Mapa inicializado");
 
-  // Forzar actualización del tamaño
   setTimeout(() => {
     map.invalidateSize();
   }, 200);
 
-  // IMPORTANTE: Obtener ubicación inmediatamente
   getUserLocation();
 }
 
@@ -69,27 +61,22 @@ async function getUserLocation() {
 
   if (isGettingLocation) return;
 
-  // Verificar permisos primero
   const hasPermission = await checkMapPermissions();
 
   if (hasPermission) {
-    // Tiene permisos, mostrar loading
     isGettingLocation = true;
     console.log("📍 Obteniendo tu ubicación...");
     showLocationLoading();
   } else {
-    // No tiene permisos, intentar silenciosamente (puede que sí los tenga pero no se pudo verificar)
     console.log("📍 Intentando obtener ubicación...");
   }
 
   navigator.geolocation.getCurrentPosition(
-    // ✅ Éxito
     (position) => {
       const { latitude, longitude, accuracy } = position.coords;
       console.log("✅ Ubicación obtenida:", latitude, longitude);
       console.log("🎯 Precisión:", Math.round(accuracy), "metros");
 
-      // IMPORTANTE: Centrar mapa inmediatamente
       if (map) {
         map.setView([latitude, longitude], 16, {
           animate: true,
@@ -97,36 +84,40 @@ async function getUserLocation() {
         });
       }
 
-      // Añadir marcador azul "Estás aquí"
       addUserLocationMarker(latitude, longitude, accuracy);
-
-      // Ocultar indicador de carga
       hideLocationLoading();
-
       isGettingLocation = false;
     },
-    // ❌ Error
     async (error) => {
-      // Solo mostrar alerta si NO es por permisos denegados
       if (error.code !== 1) {
         console.warn("⚠️ Error al obtener ubicación:", error.message);
 
         let errorMsg = "";
+        const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+
         switch (error.code) {
           case error.POSITION_UNAVAILABLE:
-            errorMsg = "Ubicación no disponible";
+            errorMsg =
+              lang === "en"
+                ? "Location unavailable"
+                : "Ubicación no disponible";
             break;
           case error.TIMEOUT:
-            errorMsg = "Tiempo de espera agotado";
+            errorMsg =
+              lang === "en" ? "Request timed out" : "Tiempo de espera agotado";
             break;
         }
 
         if (errorMsg) {
-          await showInfo(
-            `${errorMsg}. El mapa se mostrará en Bilbao por defecto.`,
-            "No se pudo obtener ubicación",
-            "📍"
-          );
+          const title =
+            lang === "en"
+              ? "Could not get location"
+              : "No se pudo obtener ubicación";
+          const message =
+            lang === "en"
+              ? `${errorMsg}. The map will show Bilbao by default.`
+              : `${errorMsg}. El mapa se mostrará en Bilbao por defecto.`;
+          await showInfo(message, title, "📍");
         }
       } else {
         console.log(
@@ -137,53 +128,55 @@ async function getUserLocation() {
       hideLocationLoading();
       isGettingLocation = false;
     },
-    // ⚙️ Opciones optimizadas
     {
-      enableHighAccuracy: true, // Usar GPS si está disponible
-      timeout: 8000, // Esperar máximo 8 segundos
-      maximumAge: 0, // No usar caché, ubicación en tiempo real
+      enableHighAccuracy: true,
+      timeout: 8000,
+      maximumAge: 0,
     }
   );
 }
 
 // Mostrar indicador de carga
 function showLocationLoading() {
-  // Crear overlay de carga si no existe
   if (!document.getElementById("locationLoadingOverlay")) {
+    const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+    const loadingText =
+      lang === "en" ? "Getting your location..." : "Obteniendo tu ubicación...";
+
     const overlay = document.createElement("div");
     overlay.id = "locationLoadingOverlay";
     overlay.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            border-radius: 12px;
-        `;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      border-radius: 12px;
+    `;
     overlay.innerHTML = `
-            <div style="
-                font-size: 3rem;
-                animation: spin 1.5s linear infinite;
-            ">📍</div>
-            <p style="
-                margin-top: 15px;
-                font-size: 1.1rem;
-                color: #6366f1;
-                font-weight: 600;
-            ">Obteniendo tu ubicación...</p>
-            <style>
-                @keyframes spin {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-            </style>
-        `;
+      <div style="
+        font-size: 3rem;
+        animation: spin 1.5s linear infinite;
+      ">📍</div>
+      <p style="
+        margin-top: 15px;
+        font-size: 1.1rem;
+        color: #6366f1;
+        font-weight: 600;
+      ">${loadingText}</p>
+      <style>
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      </style>
+    `;
 
     const mapContainer = document.getElementById("map");
     if (mapContainer && mapContainer.parentElement) {
@@ -201,14 +194,12 @@ function hideLocationLoading() {
   }
 }
 
-// Añadir marcador azul de ubicación del usuario (MEJORADO)
+// Añadir marcador azul de ubicación del usuario
 function addUserLocationMarker(lat, lng, accuracy = 100) {
-  // Remover marcador anterior si existe
   if (userLocationMarker) {
     map.removeLayer(userLocationMarker);
   }
 
-  // Crear icono azul personalizado con animación
   const blueIcon = L.divIcon({
     className: "user-location-marker",
     html: `<div class="user-location-dot"></div>`,
@@ -216,28 +207,31 @@ function addUserLocationMarker(lat, lng, accuracy = 100) {
     iconAnchor: [12, 12],
   });
 
-  // Añadir marcador al mapa
   userLocationMarker = L.marker([lat, lng], {
     icon: blueIcon,
     zIndexOffset: 1000,
   }).addTo(map);
 
-  // Popup informativo
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+  const youAreHere = lang === "en" ? "You are here" : "Estás aquí";
+  const accuracyText = lang === "en" ? "Accuracy" : "Precisión";
+
   userLocationMarker
     .bindPopup(
       `
-        <strong>📍 Estás aquí</strong><br>
-        <small>Precisión: ~${Math.round(accuracy)} metros</small>
+      <strong>📍 ${youAreHere}</strong><br>
+      <small>${accuracyText}: ~${Math.round(accuracy)} ${
+        lang === "en" ? "meters" : "metros"
+      }</small>
     `
     )
     .openPopup();
 
-  // Círculo de precisión
   L.circle([lat, lng], {
     color: "#3b82f6",
     fillColor: "#3b82f6",
     fillOpacity: 0.1,
-    radius: Math.min(accuracy, 200), // Máximo 200m de radio visual
+    radius: Math.min(accuracy, 200),
   }).addTo(map);
 }
 
@@ -247,22 +241,18 @@ async function onMapClickHandler(e) {
 
   console.log("🗺️ Click en mapa:", lat, lng);
 
-  // Añadir marcador
   addMapMarker(lat, lng);
 
-  // Obtener dirección (geocodificación inversa)
   const address = await reverseGeocode(lat, lng);
 
-  // Llamar a la función del formulario
   if (window.onMapClick) {
     window.onMapClick(lat, lng, address);
   }
 }
 
-// Geocodificación inversa (coordenadas → dirección) ✨ CORREGIDO
+// Geocodificación inversa
 async function reverseGeocode(lat, lng) {
   try {
-    // Usar Nominatim de OpenStreetMap para geocodificación inversa
     const response = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
       {
@@ -288,12 +278,10 @@ async function reverseGeocode(lat, lng) {
 }
 
 function addMapMarker(lat, lng, popupText = null) {
-  // Remover marcador anterior
   if (currentMarker) {
     map.removeLayer(currentMarker);
   }
 
-  // Icono rojo personalizado con HTML/CSS (no depende de imágenes externas)
   const redIcon = L.divIcon({
     className: "custom-red-marker",
     html: `
@@ -324,12 +312,11 @@ function centerMapOnLocation(lat, lng) {
   }
 }
 
-// Exportar funciones para uso global (MOVER AL FINAL)
+// Exportar funciones para uso global
 window.initializeMap = initializeMap;
 window.centerMapOnLocation = centerMapOnLocation;
 window.addMapMarker = addMapMarker;
 
-// Exportar map dinámicamente - se actualizará cuando se cree
 Object.defineProperty(window, "map", {
   get() {
     return map;
@@ -344,7 +331,6 @@ let searchTimeout = null;
 const mapSearchInput = document.getElementById("mapSearchInput");
 const mapSearchResults = document.getElementById("mapSearchResults");
 
-// Escuchar input del buscador
 if (mapSearchInput) {
   mapSearchInput.addEventListener("input", (e) => {
     const query = e.target.value.trim();
@@ -480,30 +466,42 @@ function selectPlace(place) {
 }
 
 function showLoading() {
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+  const searchingText =
+    lang === "en" ? "Searching places..." : "Buscando lugares...";
+
   mapSearchResults.innerHTML = `
     <div class="search-loading">
       <div class="search-loading-spinner"></div>
-      <p style="margin-top: 10px;">Buscando lugares...</p>
+      <p style="margin-top: 10px;">${searchingText}</p>
     </div>
   `;
   mapSearchResults.classList.add("show");
 }
 
 function showNoResults() {
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+  const noResultsText =
+    lang === "en" ? "No places found" : "No se encontraron lugares";
+
   mapSearchResults.innerHTML = `
     <div class="search-no-results">
       <div class="search-no-results-icon">🔍</div>
-      <p>No se encontraron lugares</p>
+      <p>${noResultsText}</p>
     </div>
   `;
   mapSearchResults.classList.add("show");
 }
 
 function showSearchError() {
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+  const errorText =
+    lang === "en" ? "Error searching places" : "Error al buscar lugares";
+
   mapSearchResults.innerHTML = `
     <div class="search-no-results">
       <div class="search-no-results-icon">⚠️</div>
-      <p>Error al buscar lugares</p>
+      <p>${errorText}</p>
     </div>
   `;
   mapSearchResults.classList.add("show");

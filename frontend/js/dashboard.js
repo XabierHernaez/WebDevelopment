@@ -28,11 +28,17 @@ userName.textContent = currentUser.name;
 
 // Logout
 logoutBtn.addEventListener("click", async () => {
-  const confirmed = await showConfirm(
-    "Se cerrará tu sesión actual",
-    "¿Seguro que quieres cerrar sesión?",
-    "🚪"
-  );
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+  const title =
+    lang === "en"
+      ? "Are you sure you want to log out?"
+      : "¿Seguro que quieres cerrar sesión?";
+  const message =
+    lang === "en"
+      ? "Your current session will be closed"
+      : "Se cerrará tu sesión actual";
+
+  const confirmed = await showConfirm(message, title, "🚪");
 
   if (confirmed) {
     localStorage.removeItem("token");
@@ -106,6 +112,10 @@ function closeModalFn() {
 
 // Cargar recordatorios
 async function loadReminders() {
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+  const errorText =
+    lang === "en" ? "Error loading reminders" : "Error al cargar recordatorios";
+
   try {
     const response = await fetch(`${API_URL}/reminders`, {
       headers: {
@@ -122,16 +132,28 @@ async function loadReminders() {
     }
   } catch (error) {
     console.error("Error al cargar recordatorios:", error);
-    remindersList.innerHTML =
-      '<div class="loading">Error al cargar recordatorios</div>';
+    remindersList.innerHTML = `<div class="loading">${errorText}</div>`;
   }
 }
 
 // Renderizar lista de recordatorios
 function renderReminders() {
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+  const locale = lang === "en" ? "en-US" : "es-ES";
+
+  const noRemindersText =
+    lang === "en"
+      ? "You don't have any reminders yet. Create a new one!"
+      : "No tienes recordatorios aún. ¡Crea uno nuevo!";
+  const markPendingText =
+    lang === "en" ? "Mark as pending" : "Marcar como pendiente";
+  const markCompletedText =
+    lang === "en" ? "Mark as completed" : "Marcar como completado";
+  const deleteText = lang === "en" ? "Delete" : "Eliminar";
+  const viewOnMapText = lang === "en" ? "View on map" : "Ver en mapa";
+
   if (reminders.length === 0) {
-    remindersList.innerHTML =
-      '<div class="loading">No tienes recordatorios aún. ¡Crea uno nuevo!</div>';
+    remindersList.innerHTML = `<div class="loading">${noRemindersText}</div>`;
     return;
   }
 
@@ -157,7 +179,7 @@ function renderReminders() {
               reminder.datetime
                 ? `<div class="reminder-meta">📅 ${new Date(
                     reminder.datetime
-                  ).toLocaleString("es-ES")}</div>`
+                  ).toLocaleString(locale)}</div>`
                 : ""
             }
             ${
@@ -169,18 +191,16 @@ function renderReminders() {
                 <button class="btn-icon" onclick="toggleComplete(${
                   reminder.id
                 }, ${!reminder.is_completed})" title="${
-        reminder.is_completed
-          ? "Marcar como pendiente"
-          : "Marcar como completado"
+        reminder.is_completed ? markPendingText : markCompletedText
       }">
                     ${reminder.is_completed ? "↩️" : "✅"}
                 </button>
                 <button class="btn-icon" onclick="deleteReminder(${
                   reminder.id
-                })" title="Eliminar">🗑️</button>
+                })" title="${deleteText}">🗑️</button>
                 ${
                   reminder.coordinates
-                    ? `<button class="btn-icon" onclick="focusOnMap(${reminder.coordinates.lat}, ${reminder.coordinates.lng})" title="Ver en mapa">🗺️</button>`
+                    ? `<button class="btn-icon" onclick="focusOnMap(${reminder.coordinates.lat}, ${reminder.coordinates.lng})" title="${viewOnMapText}">🗺️</button>`
                     : ""
                 }
             </div>
@@ -203,17 +223,29 @@ function updateMapMarkers() {
 
 // Obtener texto del tipo de recordatorio
 function getReminderTypeText(type) {
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+
   const types = {
-    datetime: "Fecha/Hora",
-    location: "Ubicación",
-    both: "Fecha + Ubicación",
+    es: {
+      datetime: "Fecha/Hora",
+      location: "Ubicación",
+      both: "Fecha + Ubicación",
+    },
+    en: {
+      datetime: "Date/Time",
+      location: "Location",
+      both: "Date + Location",
+    },
   };
-  return types[type] || type;
+
+  return (types[lang] || types.es)[type] || type;
 }
 
 // Crear recordatorio
 reminderForm.addEventListener("submit", async (e) => {
   e.preventDefault();
+
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
 
   const title = document.getElementById("reminderTitle").value;
   const description = document.getElementById("reminderDescription").value;
@@ -248,24 +280,30 @@ reminderForm.addEventListener("submit", async (e) => {
     const data = await response.json();
 
     if (data.success) {
-      await showSuccess(
-        "Tu recordatorio ha sido creado correctamente",
-        "¡Recordatorio creado!",
-        "✅"
-      );
+      const successTitle =
+        lang === "en" ? "Reminder created!" : "¡Recordatorio creado!";
+      const successMsg =
+        lang === "en"
+          ? "Your reminder has been created successfully"
+          : "Tu recordatorio ha sido creado correctamente";
+      await showSuccess(successMsg, successTitle, "✅");
       window.location.href = "reminders-list.html";
     } else {
-      await showError(
-        data.message || "No se pudo crear el recordatorio",
-        "Error al crear"
-      );
+      const errorTitle = lang === "en" ? "Error creating" : "Error al crear";
+      const errorMsg =
+        lang === "en"
+          ? "Could not create the reminder"
+          : "No se pudo crear el recordatorio";
+      await showError(data.message || errorMsg, errorTitle);
     }
   } catch (error) {
     console.error("Error al crear recordatorio:", error);
-    await showError(
-      "Hubo un problema al crear el recordatorio",
-      "Error de conexión"
-    );
+    const errorTitle = lang === "en" ? "Connection error" : "Error de conexión";
+    const errorMsg =
+      lang === "en"
+        ? "There was a problem creating the reminder"
+        : "Hubo un problema al crear el recordatorio";
+    await showError(errorMsg, errorTitle);
   }
 });
 
@@ -293,11 +331,16 @@ async function toggleComplete(id, isCompleted) {
 
 // Eliminar recordatorio
 async function deleteReminder(id) {
-  const confirmed = await showConfirm(
-    "Esta acción no se puede deshacer",
-    "¿Eliminar este recordatorio?",
-    "🗑️"
-  );
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+
+  const confirmTitle =
+    lang === "en" ? "Delete this reminder?" : "¿Eliminar este recordatorio?";
+  const confirmMsg =
+    lang === "en"
+      ? "This action cannot be undone"
+      : "Esta acción no se puede deshacer";
+
+  const confirmed = await showConfirm(confirmMsg, confirmTitle, "🗑️");
 
   if (!confirmed) return;
 
@@ -313,15 +356,22 @@ async function deleteReminder(id) {
 
     if (data.success) {
       loadReminders();
-      await showSuccess(
-        "El recordatorio ha sido eliminado",
-        "Recordatorio eliminado",
-        "✅"
-      );
+      const successTitle =
+        lang === "en" ? "Reminder deleted" : "Recordatorio eliminado";
+      const successMsg =
+        lang === "en"
+          ? "The reminder has been deleted"
+          : "El recordatorio ha sido eliminado";
+      await showSuccess(successMsg, successTitle, "✅");
     }
   } catch (error) {
     console.error("Error al eliminar recordatorio:", error);
-    await showError("No se pudo eliminar el recordatorio", "Error al eliminar");
+    const errorTitle = lang === "en" ? "Error deleting" : "Error al eliminar";
+    const errorMsg =
+      lang === "en"
+        ? "Could not delete the reminder"
+        : "No se pudo eliminar el recordatorio";
+    await showError(errorMsg, errorTitle);
   }
 }
 

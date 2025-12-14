@@ -46,6 +46,10 @@ function addTemporaryMarker(lat, lng) {
     map.removeLayer(window.tempMarker);
   }
 
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+  const selectedLocationText =
+    lang === "en" ? "Selected location" : "Ubicación seleccionada";
+
   // Crear nuevo marcador temporal
   window.tempMarker = L.marker([lat, lng], {
     icon: L.icon({
@@ -60,11 +64,15 @@ function addTemporaryMarker(lat, lng) {
     }),
   }).addTo(map);
 
-  window.tempMarker.bindPopup("📍 Ubicación seleccionada").openPopup();
+  window.tempMarker.bindPopup(`📍 ${selectedLocationText}`).openPopup();
 }
 
 // Geocodificación inversa (coordenadas → dirección)
 async function reverseGeocode(lat, lng) {
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+  const selectedLocationLabel =
+    lang === "en" ? "Selected location:" : "Ubicación seleccionada:";
+
   try {
     const response = await fetch("http://localhost:8000/api/reverse-geocode", {
       method: "POST",
@@ -89,12 +97,10 @@ async function reverseGeocode(lat, lng) {
       const selectedLocationDiv = document.getElementById("selectedLocation");
       if (selectedLocationDiv) {
         selectedLocationDiv.innerHTML = `
-                    <strong>✅ Ubicación seleccionada:</strong><br>
-                    ${address}<br>
-                    <small>Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(
-          6
-        )}</small>
-                `;
+          <strong>✅ ${selectedLocationLabel}</strong><br>
+          ${address}<br>
+          <small>Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}</small>
+        `;
       }
     }
   } catch (error) {
@@ -107,6 +113,8 @@ function addReminderMarker(reminder) {
   if (!reminder.coordinates) return;
 
   const { lat, lng } = reminder.coordinates;
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+  const locale = lang === "en" ? "en-US" : "es-ES";
 
   // Icono según el tipo
   let iconColor = "blue";
@@ -127,27 +135,27 @@ function addReminderMarker(reminder) {
 
   // Popup con información
   const popupContent = `
-        <div style="min-width: 200px;">
-            <h4 style="margin: 0 0 8px 0;">${reminder.title}</h4>
-            ${
-              reminder.description
-                ? `<p style="margin: 0 0 8px 0; font-size: 0.9em;">${reminder.description}</p>`
-                : ""
-            }
-            ${
-              reminder.address
-                ? `<p style="margin: 0; font-size: 0.85em; color: #666;">📍 ${reminder.address}</p>`
-                : ""
-            }
-            ${
+    <div style="min-width: 200px;">
+      <h4 style="margin: 0 0 8px 0;">${reminder.title}</h4>
+      ${
+        reminder.description
+          ? `<p style="margin: 0 0 8px 0; font-size: 0.9em;">${reminder.description}</p>`
+          : ""
+      }
+      ${
+        reminder.address
+          ? `<p style="margin: 0; font-size: 0.85em; color: #666;">📍 ${reminder.address}</p>`
+          : ""
+      }
+      ${
+        reminder.datetime
+          ? `<p style="margin: 4px 0 0 0; font-size: 0.85em; color: #666;">⏰ ${new Date(
               reminder.datetime
-                ? `<p style="margin: 4px 0 0 0; font-size: 0.85em; color: #666;">⏰ ${new Date(
-                    reminder.datetime
-                  ).toLocaleString("es-ES")}</p>`
-                : ""
-            }
-        </div>
-    `;
+            ).toLocaleString(locale)}</p>`
+          : ""
+      }
+    </div>
+  `;
 
   marker.bindPopup(popupContent);
 
@@ -172,6 +180,8 @@ function centerMap(lat, lng, zoom = 15) {
 
 // Obtener ubicación actual del usuario
 async function getMyLocation() {
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -185,19 +195,22 @@ async function getMyLocation() {
       },
       async (error) => {
         console.error("Error al obtener ubicación:", error);
-        await showError(
-          "No se pudo obtener tu ubicación. Verifica los permisos del navegador.",
-          "Error de ubicación",
-          "📍"
-        );
+        const title = lang === "en" ? "Location error" : "Error de ubicación";
+        const message =
+          lang === "en"
+            ? "Could not get your location. Check browser permissions."
+            : "No se pudo obtener tu ubicación. Verifica los permisos del navegador.";
+        await showError(message, title, "📍");
       }
     );
   } else {
-    await showError(
-      "Tu navegador no soporta geolocalización",
-      "Navegador incompatible",
-      "⚠️"
-    );
+    const title =
+      lang === "en" ? "Incompatible browser" : "Navegador incompatible";
+    const message =
+      lang === "en"
+        ? "Your browser does not support geolocation"
+        : "Tu navegador no soporta geolocalización";
+    await showError(message, title, "⚠️");
   }
 }
 

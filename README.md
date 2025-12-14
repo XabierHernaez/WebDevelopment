@@ -71,6 +71,10 @@ Abre `frontend/index.html` en tu navegador
 - PostgreSQL: `localhost:5432`
 - MongoDB: `localhost:27017`
 
+### 6. Para reestablecer permisos
+
+localStorage.removeItem("location_permission_asked");
+
 ## 👤 Autor
 
 Xabier H.S.

@@ -1,15 +1,11 @@
 // Sistema de notificaciones para recordatorios
 let notificationCheckInterval = null;
-let shownNotifications = new Set(); // Para no mostrar la misma notificación varias veces
+let shownNotifications = new Set();
 
 // Iniciar el sistema de notificaciones
 function startNotificationSystem() {
   console.log("🔔 Sistema de notificaciones iniciado");
-
-  // Verificar cada 30 segundos (puedes ajustarlo)
   notificationCheckInterval = setInterval(checkReminders, 30000);
-
-  // Verificar inmediatamente al iniciar
   checkReminders();
 }
 
@@ -39,17 +35,15 @@ async function checkReminders() {
       const now = new Date();
 
       data.reminders.forEach((reminder) => {
-        // Solo procesar recordatorios con fecha/hora que NO están completados ni notificados
         if (
           reminder.datetime &&
           !reminder.is_completed &&
           !reminder.is_notified &&
-          !shownNotifications.has(reminder.id) // ✨ IMPORTANTE: Verificar que no se haya mostrado ya
+          !shownNotifications.has(reminder.id)
         ) {
           const reminderTime = new Date(reminder.datetime);
           const diffMinutes = Math.floor((reminderTime - now) / (1000 * 60));
 
-          // Si la hora ya pasó o está a punto (0-1 minutos)
           if (diffMinutes <= 0) {
             showNotification(reminder);
             shownNotifications.add(reminder.id);
@@ -66,68 +60,74 @@ async function checkReminders() {
 function showNotification(reminder) {
   console.log("🔔 Mostrando notificación para:", reminder.title);
 
-  // Reproducir sonido (opcional)
   playNotificationSound();
 
-  // Crear overlay
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+  const locale = lang === "en" ? "en-US" : "es-ES";
+
+  // Traducciones
+  const reminderText = lang === "en" ? "Reminder!" : "¡Recordatorio!";
+  const discardText = lang === "en" ? "🗑️ Discard" : "🗑️ Descartar";
+  const acceptText = lang === "en" ? "✅ Accept" : "✅ Aceptar";
+  const recurringText =
+    lang === "en"
+      ? "🔄 Recurring reminder - Will renew automatically"
+      : "🔄 Recordatorio recurrente - Se renovará automáticamente";
+
   const overlay = document.createElement("div");
   overlay.className = "notification-overlay";
   overlay.innerHTML = `
-        <div class="notification-modal">
-            <div class="notification-header">
-                <div class="notification-icon">⏰</div>
-                <h2>¡Recordatorio!</h2>
-            </div>
-            
-            <div class="notification-body">
-                <h3>${reminder.title}</h3>
-                ${reminder.description ? `<p>${reminder.description}</p>` : ""}
-                <div class="notification-time">
-                    📅 ${new Date(reminder.datetime).toLocaleString("es-ES")}
-                </div>
-                ${
-                  reminder.address
-                    ? `
-                    <div class="notification-location">
-                        📍 ${reminder.address}
-                    </div>
-                `
-                    : ""
-                }
-                ${
-                  reminder.is_recurring
-                    ? `
-                    <div class="notification-time" style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); color: #6366f1; border: 2px solid #6366f1; margin-top: 10px;">
-                        🔄 Recordatorio recurrente - Se renovará automáticamente
-                    </div>
-                `
-                    : ""
-                }
-            </div>
-            
-            <div class="notification-actions">
-                <button class="btn-notification btn-discard" data-id="${
-                  reminder.id
-                }">
-                    🗑️ Descartar
-                </button>
-                <button class="btn-notification btn-accept" data-id="${
-                  reminder.id
-                }" data-recurring="${reminder.is_recurring || false}">
-                    ✅ Aceptar
-                </button>
-            </div>
+    <div class="notification-modal">
+      <div class="notification-header">
+        <div class="notification-icon">⏰</div>
+        <h2>${reminderText}</h2>
+      </div>
+      
+      <div class="notification-body">
+        <h3>${reminder.title}</h3>
+        ${reminder.description ? `<p>${reminder.description}</p>` : ""}
+        <div class="notification-time">
+          📅 ${new Date(reminder.datetime).toLocaleString(locale)}
         </div>
-    `;
+        ${
+          reminder.address
+            ? `
+          <div class="notification-location">
+            📍 ${reminder.address}
+          </div>
+        `
+            : ""
+        }
+        ${
+          reminder.is_recurring
+            ? `
+          <div class="notification-time" style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); color: #6366f1; border: 2px solid #6366f1; margin-top: 10px;">
+            ${recurringText}
+          </div>
+        `
+            : ""
+        }
+      </div>
+      
+      <div class="notification-actions">
+        <button class="btn-notification btn-discard" data-id="${reminder.id}">
+          ${discardText}
+        </button>
+        <button class="btn-notification btn-accept" data-id="${
+          reminder.id
+        }" data-recurring="${reminder.is_recurring || false}">
+          ${acceptText}
+        </button>
+      </div>
+    </div>
+  `;
 
   document.body.appendChild(overlay);
 
-  // Animación de entrada
   setTimeout(() => {
     overlay.classList.add("show");
   }, 10);
 
-  // Event listeners para los botones
   overlay.querySelector(".btn-accept").addEventListener("click", (e) => {
     const isRecurring = e.target.dataset.recurring === "true";
     acceptNotification(reminder.id, overlay, isRecurring);
@@ -141,10 +141,10 @@ function showNotification(reminder) {
 // Aceptar notificación
 async function acceptNotification(reminderId, overlay, isRecurring) {
   const token = localStorage.getItem("token");
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
 
   try {
     if (isRecurring) {
-      // ✨ RECORDATORIO RECURRENTE: Marcar como notificado Y renovar inmediatamente
       const response = await fetch(`${API_URL}/reminders/${reminderId}`, {
         method: "PUT",
         headers: {
@@ -153,7 +153,7 @@ async function acceptNotification(reminderId, overlay, isRecurring) {
         },
         body: JSON.stringify({
           is_notified: true,
-          is_completed: true, // Esto dispara la renovación automática en el backend
+          is_completed: true,
         }),
       });
 
@@ -162,28 +162,25 @@ async function acceptNotification(reminderId, overlay, isRecurring) {
       if (data.success) {
         console.log("✅ Recordatorio recurrente renovado automáticamente");
 
-        // ✨ IMPORTANTE: Remover de la lista de notificaciones mostradas
-        // para que pueda volver a notificar en el próximo ciclo
         shownNotifications.delete(reminderId);
-
-        // Cerrar overlay ANTES de mostrar el mensaje de éxito
         closeNotification(overlay);
 
         if (data.renewed) {
+          const title =
+            lang === "en" ? "Reminder renewed" : "Recordatorio renovado";
+          const nextText = lang === "en" ? "Next time" : "Próxima vez";
           await showSuccess(
-            `Próxima vez: ${formatDateTime(data.next_occurrence)}`,
-            "Recordatorio renovado",
+            `${nextText}: ${formatDateTime(data.next_occurrence)}`,
+            title,
             "🔄"
           );
         }
 
-        // Recargar lista si estamos en la página de recordatorios
         if (typeof loadReminders === "function") {
           loadReminders();
         }
       }
     } else {
-      // ❌ RECORDATORIO NORMAL: Solo marcar como notificado (se queda amarillo)
       const response = await fetch(`${API_URL}/reminders/${reminderId}`, {
         method: "PUT",
         headers: {
@@ -199,7 +196,6 @@ async function acceptNotification(reminderId, overlay, isRecurring) {
         console.log("✅ Recordatorio marcado como notificado");
         closeNotification(overlay);
 
-        // Recargar lista si estamos en la página de recordatorios
         if (typeof loadReminders === "function") {
           loadReminders();
         }
@@ -214,6 +210,8 @@ async function acceptNotification(reminderId, overlay, isRecurring) {
 // Formatear fecha/hora
 function formatDateTime(dateString) {
   const date = new Date(dateString);
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+  const locale = lang === "en" ? "en-US" : "es-ES";
   const options = {
     weekday: "long",
     day: "numeric",
@@ -221,7 +219,7 @@ function formatDateTime(dateString) {
     hour: "2-digit",
     minute: "2-digit",
   };
-  return date.toLocaleDateString("es-ES", options);
+  return date.toLocaleDateString(locale, options);
 }
 
 // Descartar notificación (eliminar recordatorio)
@@ -240,13 +238,9 @@ async function discardNotification(reminderId, overlay) {
 
     if (data.success) {
       console.log("🗑️ Recordatorio eliminado");
-
-      // ✨ Limpiar de la lista de notificaciones mostradas
       shownNotifications.delete(reminderId);
-
       closeNotification(overlay);
 
-      // Recargar lista si estamos en la página de recordatorios
       if (typeof loadReminders === "function") {
         loadReminders();
       }
@@ -265,9 +259,8 @@ function closeNotification(overlay) {
   }, 300);
 }
 
-// Reproducir sonido de notificación (opcional)
+// Reproducir sonido de notificación
 function playNotificationSound() {
-  // Crear un beep simple usando Web Audio API
   try {
     const audioContext = new (window.AudioContext ||
       window.webkitAudioContext)();
@@ -292,6 +285,7 @@ function playNotificationSound() {
     console.log("No se pudo reproducir sonido");
   }
 }
+
 // ========== GEOFENCING (Verificación de ubicación) ==========
 
 let geofencingInterval = null;
@@ -300,11 +294,9 @@ let shownLocationNotifications = new Set();
 async function startGeofencing() {
   console.log("📍 Sistema de geofencing iniciado");
 
-  // Primero verificar si el navegador ya tiene permisos guardados
   const browserPermission = await checkBrowserPermission();
 
   if (browserPermission === "granted") {
-    // Ya tiene permisos, iniciar directamente SIN pedir nada
     console.log("✅ Permisos ya concedidos previamente");
     geofencingInterval = setInterval(checkLocationReminders, 10000);
     checkLocationReminders();
@@ -312,34 +304,29 @@ async function startGeofencing() {
   }
 
   if (browserPermission === "denied") {
-    // Usuario denegó permisos, no molestar
     console.log("⚠️ Permisos denegados por el usuario");
     return;
   }
 
-  // Si no tiene permisos (prompt), verificar si ya preguntamos
   const alreadyAsked = checkLocationPermission();
 
   if (alreadyAsked) {
-    // Ya preguntamos antes pero no respondió o cambió de página
-    // No volver a molestar
     console.log("🔕 Ya se solicitaron permisos anteriormente");
     return;
   } else {
-    // Primera vez, mostrar modal educativo
     showPermissionRequestModal();
   }
 }
 
-// Nueva función: Verificar permisos del navegador
+// Verificar permisos del navegador
 async function checkBrowserPermission() {
   if (!navigator.permissions) {
-    return "prompt"; // No soportado, asumir que debe preguntar
+    return "prompt";
   }
 
   try {
     const result = await navigator.permissions.query({ name: "geolocation" });
-    return result.state; // 'granted', 'denied', o 'prompt'
+    return result.state;
   } catch (error) {
     console.log("No se pudo verificar permisos del navegador");
     return "prompt";
@@ -348,58 +335,88 @@ async function checkBrowserPermission() {
 
 // Verificar si ya preguntamos por permisos
 function checkLocationPermission() {
-  // Solo verificar si ya preguntamos antes
   const alreadyAsked = localStorage.getItem("location_permission_asked");
   return alreadyAsked === "true";
 }
 
 // Mostrar modal de solicitud de permisos
 function showPermissionRequestModal() {
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+
+  // Traducciones
+  const texts = {
+    es: {
+      title: "Ubicación Requerida",
+      subtitle: "GeoRemind necesita tu ubicación",
+      description:
+        "Para notificarte cuando te acerques a tus recordatorios guardados, necesitamos acceso a tu ubicación.",
+      feature1: "Recordatorios automáticos al acercarte a un lugar",
+      feature2: "Centrado automático del mapa en tu posición",
+      feature3: "Tu ubicación es privada y segura",
+      denyBtn: "Ahora no",
+      allowBtn: "✓ Permitir ubicación",
+      note: "Solo se te preguntará esta vez. Puedes cambiar los permisos desde la configuración del navegador.",
+    },
+    en: {
+      title: "Location Required",
+      subtitle: "GeoRemind needs your location",
+      description:
+        "To notify you when you approach your saved reminders, we need access to your location.",
+      feature1: "Automatic reminders when approaching a place",
+      feature2: "Automatic map centering on your position",
+      feature3: "Your location is private and secure",
+      denyBtn: "Not now",
+      allowBtn: "✓ Allow location",
+      note: "You will only be asked this once. You can change permissions from your browser settings.",
+    },
+  };
+
+  const t = texts[lang] || texts.es;
+
   const modal = document.createElement("div");
   modal.className = "permission-modal-overlay";
   modal.innerHTML = `
-        <div class="permission-modal">
-            <div class="permission-header">
-                <div class="permission-icon">📍</div>
-                <h2>Ubicación Requerida</h2>
-            </div>
-            
-            <div class="permission-body">
-                <h3>GeoRemind necesita tu ubicación</h3>
-                <p>Para notificarte cuando te acerques a tus recordatorios guardados, necesitamos acceso a tu ubicación.</p>
-                
-                <div class="permission-features">
-                    <div class="permission-feature">
-                        <span class="permission-feature-icon">🔔</span>
-                        <span class="permission-feature-text">Recordatorios automáticos al acercarte a un lugar</span>
-                    </div>
-                    <div class="permission-feature">
-                        <span class="permission-feature-icon">🗺️</span>
-                        <span class="permission-feature-text">Centrado automático del mapa en tu posición</span>
-                    </div>
-                    <div class="permission-feature">
-                        <span class="permission-feature-icon">🔒</span>
-                        <span class="permission-feature-text">Tu ubicación es privada y segura</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="permission-actions">
-                <button class="btn-permission btn-deny" id="denyPermissionBtn">
-                    Ahora no
-                </button>
-                <button class="btn-permission btn-allow" id="allowPermissionBtn">
-                    ✓ Permitir ubicación
-                </button>
-            </div>
-            
-            <p class="permission-note">Solo se te preguntará esta vez. Puedes cambiar los permisos desde la configuración del navegador.</p>
+    <div class="permission-modal">
+      <div class="permission-header">
+        <div class="permission-icon">📍</div>
+        <h2>${t.title}</h2>
+      </div>
+      
+      <div class="permission-body">
+        <h3>${t.subtitle}</h3>
+        <p>${t.description}</p>
+        
+        <div class="permission-features">
+          <div class="permission-feature">
+            <span class="permission-feature-icon">🔔</span>
+            <span class="permission-feature-text">${t.feature1}</span>
+          </div>
+          <div class="permission-feature">
+            <span class="permission-feature-icon">🗺️</span>
+            <span class="permission-feature-text">${t.feature2}</span>
+          </div>
+          <div class="permission-feature">
+            <span class="permission-feature-icon">🔒</span>
+            <span class="permission-feature-text">${t.feature3}</span>
+          </div>
         </div>
-    `;
+      </div>
+      
+      <div class="permission-actions">
+        <button class="btn-permission btn-deny" id="denyPermissionBtn">
+          ${t.denyBtn}
+        </button>
+        <button class="btn-permission btn-allow" id="allowPermissionBtn">
+          ${t.allowBtn}
+        </button>
+      </div>
+      
+      <p class="permission-note">${t.note}</p>
+    </div>
+  `;
 
   document.body.appendChild(modal);
 
-  // Event listeners
   document
     .getElementById("allowPermissionBtn")
     .addEventListener("click", () => {
@@ -407,7 +424,6 @@ function showPermissionRequestModal() {
     });
 
   document.getElementById("denyPermissionBtn").addEventListener("click", () => {
-    // Marcar que ya preguntamos (para no volver a mostrar el modal)
     localStorage.setItem("location_permission_asked", "true");
     modal.remove();
     console.log("Usuario rechazó permisos de ubicación");
@@ -416,28 +432,25 @@ function showPermissionRequestModal() {
 
 // Solicitar permisos de ubicación
 function requestLocationPermission(modal) {
-  // Marcar que ya preguntamos
   localStorage.setItem("location_permission_asked", "true");
-
-  // Cerrar modal primero
   modal.remove();
 
-  // Ahora el navegador pedirá permisos (con su diálogo nativo)
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+
   navigator.geolocation.getCurrentPosition(
     (position) => {
       console.log("✅ Permisos de ubicación concedidos");
-
-      // Iniciar verificación de ubicaciones
       startLocationChecking();
     },
     (error) => {
       console.warn("⚠️ Permisos denegados:", error.message);
 
       if (error.code === 1) {
-        // PERMISSION_DENIED
-        alert(
-          "⚠️ Has bloqueado el acceso a la ubicación. Las notificaciones por proximidad no funcionarán.\n\nPara activarlo, ve a la configuración de tu navegador."
-        );
+        const message =
+          lang === "en"
+            ? "⚠️ You have blocked location access. Proximity notifications will not work.\n\nTo enable it, go to your browser settings."
+            : "⚠️ Has bloqueado el acceso a la ubicación. Las notificaciones por proximidad no funcionarán.\n\nPara activarlo, ve a la configuración de tu navegador.";
+        alert(message);
       }
     },
     {
@@ -452,16 +465,13 @@ function requestLocationPermission(modal) {
 function startLocationChecking() {
   console.log("🔄 Iniciando verificación de ubicaciones");
 
-  // Primero verificar si tenemos permisos sin pedirlos
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      // Tenemos permisos, iniciar verificaciones periódicas
       console.log("✅ Permisos ya concedidos, iniciando verificaciones");
       geofencingInterval = setInterval(checkLocationReminders, 10000);
       checkLocationReminders();
     },
     (error) => {
-      // No tenemos permisos o fueron denegados
       if (error.code === 1) {
         console.log("⚠️ Permisos de ubicación denegados");
       } else {
@@ -469,9 +479,9 @@ function startLocationChecking() {
       }
     },
     {
-      enableHighAccuracy: false, // No necesitamos alta precisión para verificar
+      enableHighAccuracy: false,
       timeout: 5000,
-      maximumAge: 300000, // Usar caché de 5 minutos
+      maximumAge: 300000,
     }
   );
 }
@@ -481,7 +491,6 @@ async function checkLocationReminders() {
   const token = localStorage.getItem("token");
   if (!token) return;
 
-  // Obtener ubicación actual del usuario
   if (!navigator.geolocation) {
     console.warn("Geolocalización no disponible");
     return;
@@ -494,7 +503,6 @@ async function checkLocationReminders() {
 
       console.log("📍 Ubicación actual:", userLat, userLng);
 
-      // Obtener recordatorios con ubicación
       try {
         const response = await fetch(`${API_URL}/reminders`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -504,7 +512,6 @@ async function checkLocationReminders() {
 
         if (data.success) {
           data.reminders.forEach(async (reminder) => {
-            // Solo recordatorios con ubicación, no completados, no notificados
             if (
               (reminder.reminder_type === "location" ||
                 reminder.reminder_type === "both") &&
@@ -512,7 +519,6 @@ async function checkLocationReminders() {
               !reminder.is_notified &&
               !shownLocationNotifications.has(reminder.id)
             ) {
-              // Obtener coordenadas del recordatorio desde Geo Service
               const coords = await getReminderCoordinates(reminder.location_id);
 
               if (coords) {
@@ -529,7 +535,6 @@ async function checkLocationReminders() {
                   )} km`
                 );
 
-                // Si está a menos de 2km
                 if (distance <= 2) {
                   showLocationNotification(reminder, distance);
                   shownLocationNotifications.add(reminder.id);
@@ -543,7 +548,6 @@ async function checkLocationReminders() {
       }
     },
     (error) => {
-      // No mostrar warnings si el usuario denegó permisos (code 1)
       if (error.code !== 1) {
         console.warn("No se pudo obtener ubicación:", error.message);
       }
@@ -551,7 +555,7 @@ async function checkLocationReminders() {
     {
       enableHighAccuracy: true,
       timeout: 10000,
-      maximumAge: 30000, // Usar caché de 30 segundos
+      maximumAge: 30000,
     }
   );
 }
@@ -582,7 +586,7 @@ async function getReminderCoordinates(locationId) {
 
 // Calcular distancia entre dos puntos (fórmula de Haversine)
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Radio de la Tierra en km
+  const R = 6371;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
 
@@ -609,53 +613,66 @@ function showLocationNotification(reminder, distance) {
 
   playNotificationSound();
 
+  const lang = typeof getLanguage === "function" ? getLanguage() : "es";
+
+  // Traducciones
+  const youAreClose = lang === "en" ? "You're close!" : "¡Estás cerca!";
+  const savedLocation = lang === "en" ? "Saved location" : "Ubicación guardada";
+  const youAreAt = lang === "en" ? "You are" : "Estás a";
+  const metersText = lang === "en" ? "meters" : "metros";
+  const discardText = lang === "en" ? "🗑️ Discard" : "🗑️ Descartar";
+  const acceptText = lang === "en" ? "✅ Accept" : "✅ Aceptar";
+  const recurringText =
+    lang === "en"
+      ? "🔄 Recurring reminder - Will renew automatically"
+      : "🔄 Recordatorio recurrente - Se renovará automáticamente";
+
+  const distanceText =
+    distance < 1
+      ? `${Math.round(distance * 1000)} ${metersText}`
+      : `${distance.toFixed(1)} km`;
+
   const overlay = document.createElement("div");
   overlay.className = "notification-overlay";
   overlay.innerHTML = `
-        <div class="notification-modal">
-            <div class="notification-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-                <div class="notification-icon">📍</div>
-                <h2>¡Estás cerca!</h2>
-            </div>
-            
-            <div class="notification-body">
-                <h3>${reminder.title}</h3>
-                ${reminder.description ? `<p>${reminder.description}</p>` : ""}
-                <div class="notification-location">
-                    📍 ${reminder.address || "Ubicación guardada"}
-                </div>
-                <div class="notification-time" style="background: #d1fae5; color: #065f46;">
-                    📏 Estás a ${
-                      distance < 1
-                        ? Math.round(distance * 1000) + " metros"
-                        : distance.toFixed(1) + " km"
-                    }
-                </div>
-                ${
-                  reminder.is_recurring
-                    ? `
-                    <div class="notification-time" style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); color: #6366f1; border: 2px solid #6366f1; margin-top: 10px;">
-                        🔄 Recordatorio recurrente - Se renovará automáticamente
-                    </div>
-                `
-                    : ""
-                }
-            </div>
-            
-            <div class="notification-actions">
-                <button class="btn-notification btn-discard" data-id="${
-                  reminder.id
-                }">
-                    🗑️ Descartar
-                </button>
-                <button class="btn-notification btn-accept" data-id="${
-                  reminder.id
-                }" data-recurring="${reminder.is_recurring || false}">
-                    ✅ Aceptar
-                </button>
-            </div>
+    <div class="notification-modal">
+      <div class="notification-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+        <div class="notification-icon">📍</div>
+        <h2>${youAreClose}</h2>
+      </div>
+      
+      <div class="notification-body">
+        <h3>${reminder.title}</h3>
+        ${reminder.description ? `<p>${reminder.description}</p>` : ""}
+        <div class="notification-location">
+          📍 ${reminder.address || savedLocation}
         </div>
-    `;
+        <div class="notification-time" style="background: #d1fae5; color: #065f46;">
+          📏 ${youAreAt} ${distanceText}
+        </div>
+        ${
+          reminder.is_recurring
+            ? `
+          <div class="notification-time" style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); color: #6366f1; border: 2px solid #6366f1; margin-top: 10px;">
+            ${recurringText}
+          </div>
+        `
+            : ""
+        }
+      </div>
+      
+      <div class="notification-actions">
+        <button class="btn-notification btn-discard" data-id="${reminder.id}">
+          ${discardText}
+        </button>
+        <button class="btn-notification btn-accept" data-id="${
+          reminder.id
+        }" data-recurring="${reminder.is_recurring || false}">
+          ${acceptText}
+        </button>
+      </div>
+    </div>
+  `;
 
   document.body.appendChild(overlay);
 

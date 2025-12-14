@@ -555,3 +555,62 @@ body {
   color: #1e40af;
   border: 2px solid #3b82f6;
 }
+
+/* === SELECTOR DE IDIOMA === */
+.language-selector-container {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.auth-card {
+  position: relative;
+}
+
+.language-selector select {
+  padding: 8px 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.language-selector select:hover {
+  border-color: #6366f1;
+}
+
+.language-selector select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* En el header */
+.header-content-center {
+  position: relative;
+}
+
+.header-content-center .language-selector-container {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.header-content-center .language-selector select {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.header-content-center .language-selector select:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.header-content-center .language-selector select option {
+  color: #1f2937;
+  background: white;
+}
