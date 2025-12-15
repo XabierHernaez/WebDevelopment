@@ -17,8 +17,9 @@ const createReminder = async (req, res) => {
     address,
     is_recurring,
     recurrence_pattern,
+    share_with, // Array de IDs de amigos para compartir
   } = req.body;
-  const userId = req.user.userId; // Del token JWT
+  const userId = req.user.userId;
 
   try {
     // Validaciones
@@ -61,7 +62,7 @@ const createReminder = async (req, res) => {
       });
     }
 
-    // ✨ Validar recurrencia si se proporciona
+    // Validar recurrencia si se proporciona
     if (is_recurring && !isValidPattern(recurrence_pattern)) {
       return res.status(400).json({
         success: false,
@@ -130,6 +131,38 @@ const createReminder = async (req, res) => {
 
     const reminder = result.rows[0];
 
+    // ✨ COMPARTIR con amigos si se especifica
+    if (share_with && Array.isArray(share_with) && share_with.length > 0) {
+      // Verificar que todos son amigos del usuario
+      const friendsCheck = await pool.query(
+        `SELECT CASE 
+           WHEN requester_id = $1 THEN addressee_id 
+           ELSE requester_id 
+         END as friend_id
+         FROM friendships 
+         WHERE (requester_id = $1 OR addressee_id = $1) 
+           AND status = 'accepted'`,
+        [userId]
+      );
+
+      const friendIds = friendsCheck.rows.map((r) => r.friend_id);
+
+      // Filtrar solo los que son amigos válidos
+      const validShareIds = share_with.filter((id) => friendIds.includes(id));
+
+      // Insertar en shared_reminders
+      for (const friendId of validShareIds) {
+        await pool.query(
+          `INSERT INTO shared_reminders (reminder_id, owner_id, shared_with_id)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (reminder_id, shared_with_id) DO NOTHING`,
+          [reminder.id, userId, friendId]
+        );
+      }
+
+      reminder.shared_with = validShareIds;
+    }
+
     // Añadir coordenadas a la respuesta si existen
     if (coordinates) {
       reminder.coordinates = coordinates;
@@ -151,22 +184,63 @@ const createReminder = async (req, res) => {
   }
 };
 
-// READ - Obtener todos los recordatorios del usuario
+// READ - Obtener todos los recordatorios del usuario (propios + compartidos)
 const getReminders = async (req, res) => {
   const userId = req.user.userId;
 
   try {
-    const result = await pool.query(
-      `SELECT * FROM reminders 
-       WHERE user_id = $1 
-       ORDER BY created_at DESC`,
+    // Obtener recordatorios propios
+    const ownReminders = await pool.query(
+      `SELECT r.*, 
+              NULL as shared_by_id,
+              NULL as shared_by_name,
+              NULL as shared_by_email,
+              TRUE as is_owner
+       FROM reminders r
+       WHERE r.user_id = $1 
+       ORDER BY r.created_at DESC`,
       [userId]
     );
 
+    // Obtener recordatorios compartidos conmigo
+    const sharedReminders = await pool.query(
+      `SELECT r.*, 
+              sr.owner_id as shared_by_id,
+              u.name as shared_by_name,
+              u.email as shared_by_email,
+              FALSE as is_owner,
+              sr.can_edit
+       FROM reminders r
+       JOIN shared_reminders sr ON r.id = sr.reminder_id
+       JOIN users u ON sr.owner_id = u.id
+       WHERE sr.shared_with_id = $1
+       ORDER BY r.created_at DESC`,
+      [userId]
+    );
+
+    // Combinar y ordenar por fecha
+    const allReminders = [...ownReminders.rows, ...sharedReminders.rows].sort(
+      (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    );
+
+    // Para cada recordatorio propio, obtener con quién está compartido
+    for (const reminder of allReminders) {
+      if (reminder.is_owner) {
+        const shared = await pool.query(
+          `SELECT u.id, u.name, u.email 
+           FROM shared_reminders sr
+           JOIN users u ON sr.shared_with_id = u.id
+           WHERE sr.reminder_id = $1`,
+          [reminder.id]
+        );
+        reminder.shared_with = shared.rows;
+      }
+    }
+
     res.json({
       success: true,
-      count: result.rows.length,
-      reminders: result.rows,
+      count: allReminders.length,
+      reminders: allReminders,
     });
   } catch (error) {
     console.error("❌ Error al obtener recordatorios:", error);
@@ -184,9 +258,13 @@ const getReminderById = async (req, res) => {
   const userId = req.user.userId;
 
   try {
+    // Buscar en propios o compartidos
     const result = await pool.query(
-      `SELECT * FROM reminders 
-       WHERE id = $1 AND user_id = $2`,
+      `SELECT r.*, 
+              CASE WHEN r.user_id = $2 THEN TRUE ELSE FALSE END as is_owner
+       FROM reminders r
+       LEFT JOIN shared_reminders sr ON r.id = sr.reminder_id AND sr.shared_with_id = $2
+       WHERE r.id = $1 AND (r.user_id = $2 OR sr.shared_with_id = $2)`,
       [id, userId]
     );
 
@@ -197,9 +275,23 @@ const getReminderById = async (req, res) => {
       });
     }
 
+    const reminder = result.rows[0];
+
+    // Si es propietario, obtener con quién está compartido
+    if (reminder.is_owner) {
+      const shared = await pool.query(
+        `SELECT u.id, u.name, u.email 
+         FROM shared_reminders sr
+         JOIN users u ON sr.shared_with_id = u.id
+         WHERE sr.reminder_id = $1`,
+        [id]
+      );
+      reminder.shared_with = shared.rows;
+    }
+
     res.json({
       success: true,
-      reminder: result.rows[0],
+      reminder: reminder,
     });
   } catch (error) {
     console.error("❌ Error al obtener recordatorio:", error);
@@ -297,7 +389,7 @@ const updateReminder = async (req, res) => {
 
     const updatedReminder = result.rows[0];
 
-    // ✨ LÓGICA DE RECURRENCIA: Si se completa un recordatorio recurrente, renovarlo
+    // LÓGICA DE RECURRENCIA: Si se completa un recordatorio recurrente, renovarlo
     if (
       is_completed === true &&
       currentReminder.is_recurring &&
@@ -381,7 +473,7 @@ const deleteReminder = async (req, res) => {
   }
 };
 
-// ✨ NUEVO - Activar/actualizar recurrencia
+// Activar/actualizar recurrencia
 const setRecurrence = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.userId;
@@ -440,7 +532,7 @@ const setRecurrence = async (req, res) => {
   }
 };
 
-// ✨ NUEVO - Desactivar recurrencia
+// Desactivar recurrencia
 const removeRecurrence = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.userId;
@@ -479,7 +571,7 @@ const removeRecurrence = async (req, res) => {
   }
 };
 
-// ✨ NUEVO - Obtener próximas ocurrencias de un recordatorio recurrente
+// Obtener próximas ocurrencias de un recordatorio recurrente
 const getOccurrences = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.userId;
@@ -535,6 +627,178 @@ const getOccurrences = async (req, res) => {
   }
 };
 
+// ✨ NUEVO - Compartir recordatorio con amigos
+const shareReminder = async (req, res) => {
+  const { id } = req.params;
+  const { friend_ids } = req.body; // Array de IDs de amigos
+  const userId = req.user.userId;
+
+  try {
+    // Verificar que el recordatorio existe y es del usuario
+    const reminderCheck = await pool.query(
+      "SELECT * FROM reminders WHERE id = $1 AND user_id = $2",
+      [id, userId]
+    );
+
+    if (reminderCheck.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Recordatorio no encontrado",
+      });
+    }
+
+    if (!friend_ids || !Array.isArray(friend_ids) || friend_ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Debes especificar al menos un amigo",
+      });
+    }
+
+    // Verificar que todos son amigos del usuario
+    const friendsCheck = await pool.query(
+      `SELECT CASE 
+         WHEN requester_id = $1 THEN addressee_id 
+         ELSE requester_id 
+       END as friend_id
+       FROM friendships 
+       WHERE (requester_id = $1 OR addressee_id = $1) 
+         AND status = 'accepted'`,
+      [userId]
+    );
+
+    const friendIds = friendsCheck.rows.map((r) => r.friend_id);
+    const validFriendIds = friend_ids.filter((fid) => friendIds.includes(fid));
+
+    if (validFriendIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Ninguno de los usuarios especificados es tu amigo",
+      });
+    }
+
+    // Insertar en shared_reminders
+    const sharedWith = [];
+    for (const friendId of validFriendIds) {
+      try {
+        await pool.query(
+          `INSERT INTO shared_reminders (reminder_id, owner_id, shared_with_id)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (reminder_id, shared_with_id) DO NOTHING`,
+          [id, userId, friendId]
+        );
+        sharedWith.push(friendId);
+      } catch (err) {
+        console.error(`Error compartiendo con ${friendId}:`, err);
+      }
+    }
+
+    // Obtener nombres de los amigos con los que se compartió
+    const sharedUsers = await pool.query(
+      `SELECT id, name, email FROM users WHERE id = ANY($1)`,
+      [sharedWith]
+    );
+
+    console.log(
+      `✅ Recordatorio ${id} compartido con ${sharedWith.length} amigos`
+    );
+
+    res.json({
+      success: true,
+      message: `Recordatorio compartido con ${sharedWith.length} amigo(s)`,
+      shared_with: sharedUsers.rows,
+    });
+  } catch (error) {
+    console.error("❌ Error al compartir recordatorio:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error interno del servidor",
+      error: error.message,
+    });
+  }
+};
+
+// ✨ NUEVO - Dejar de compartir recordatorio con un amigo
+const unshareReminder = async (req, res) => {
+  const { id, friendId } = req.params;
+  const userId = req.user.userId;
+
+  try {
+    // Verificar que el recordatorio es del usuario
+    const reminderCheck = await pool.query(
+      "SELECT * FROM reminders WHERE id = $1 AND user_id = $2",
+      [id, userId]
+    );
+
+    if (reminderCheck.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Recordatorio no encontrado",
+      });
+    }
+
+    // Eliminar compartición
+    const result = await pool.query(
+      `DELETE FROM shared_reminders 
+       WHERE reminder_id = $1 AND owner_id = $2 AND shared_with_id = $3
+       RETURNING *`,
+      [id, userId, friendId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Este recordatorio no estaba compartido con ese usuario",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Se ha dejado de compartir el recordatorio",
+    });
+  } catch (error) {
+    console.error("❌ Error al dejar de compartir:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error interno del servidor",
+      error: error.message,
+    });
+  }
+};
+
+// ✨ NUEVO - Obtener recordatorios compartidos conmigo
+const getSharedWithMe = async (req, res) => {
+  const userId = req.user.userId;
+
+  try {
+    const result = await pool.query(
+      `SELECT r.*, 
+              u.id as owner_id,
+              u.name as owner_name,
+              u.email as owner_email,
+              sr.created_at as shared_at
+       FROM reminders r
+       JOIN shared_reminders sr ON r.id = sr.reminder_id
+       JOIN users u ON sr.owner_id = u.id
+       WHERE sr.shared_with_id = $1
+       ORDER BY sr.created_at DESC`,
+      [userId]
+    );
+
+    res.json({
+      success: true,
+      count: result.rows.length,
+      reminders: result.rows,
+    });
+  } catch (error) {
+    console.error("❌ Error al obtener recordatorios compartidos:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error interno del servidor",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createReminder,
   getReminders,
@@ -544,4 +808,7 @@ module.exports = {
   setRecurrence,
   removeRecurrence,
   getOccurrences,
+  shareReminder,
+  unshareReminder,
+  getSharedWithMe,
 };
