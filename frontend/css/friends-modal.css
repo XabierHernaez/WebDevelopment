@@ -1,0 +1,343 @@
+/* === MODAL DE AMIGOS === */
+
+/* Modal más grande para amigos */
+.friends-modal {
+  max-width: 550px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.friends-modal .custom-modal-body {
+  padding: 0;
+  text-align: left;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Tabs de navegación */
+.friends-tabs {
+  display: flex;
+  border-bottom: 2px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.friends-tab {
+  flex: 1;
+  padding: 15px;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.friends-tab:hover {
+  color: #6366f1;
+  background: #f3f4f6;
+}
+
+.friends-tab.active {
+  color: #6366f1;
+}
+
+.friends-tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 3px 3px 0 0;
+}
+
+.friends-tab-badge {
+  background: #ef4444;
+  color: white;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: 6px;
+}
+
+/* Contenido de tabs */
+.friends-tab-content {
+  display: none;
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  max-height: 400px;
+}
+
+.friends-tab-content.active {
+  display: block;
+}
+
+/* Buscador de usuarios */
+.friends-search-container {
+  margin-bottom: 20px;
+}
+
+.friends-search-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.friends-search-input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.friends-search-hint {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  margin-top: 8px;
+}
+
+/* Lista de usuarios/amigos */
+.friends-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.friend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: #f9fafb;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.friend-item:hover {
+  background: #f3f4f6;
+  transform: translateX(5px);
+}
+
+.friend-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.friend-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.friend-name {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.friend-email {
+  font-size: 0.85rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.friend-status {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+/* Acciones de amigo */
+.friend-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.friend-action-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.friend-action-btn.add {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+}
+
+.friend-action-btn.add:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.friend-action-btn.accept {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.friend-action-btn.accept:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.friend-action-btn.reject,
+.friend-action-btn.remove {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.friend-action-btn.reject:hover,
+.friend-action-btn.remove:hover {
+  background: #fecaca;
+}
+
+.friend-action-btn.pending {
+  background: #fef3c7;
+  color: #d97706;
+  cursor: default;
+}
+
+.friend-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Estados vacíos */
+.friends-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+}
+
+.friends-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  opacity: 0.5;
+}
+
+.friends-empty h4 {
+  margin: 0 0 8px 0;
+  color: #374151;
+  font-size: 1.1rem;
+}
+
+.friends-empty p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Loading */
+.friends-loading {
+  text-align: center;
+  padding: 30px;
+  color: #6b7280;
+}
+
+.friends-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 15px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Cerrar modal */
+.friends-modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 35px;
+  height: 35px;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.friends-modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* Header del modal de amigos */
+.friends-modal .custom-modal-header {
+  position: relative;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .friends-modal {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .friends-tab {
+    padding: 12px 8px;
+    font-size: 0.85rem;
+  }
+
+  .friends-tab-badge {
+    font-size: 0.7rem;
+    padding: 1px 6px;
+  }
+
+  .friend-item {
+    padding: 12px;
+  }
+
+  .friend-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .friend-action-btn {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+
+  .friends-tab-content {
+    max-height: 350px;
+  }
+}
