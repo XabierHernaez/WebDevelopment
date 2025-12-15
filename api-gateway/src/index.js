@@ -32,7 +32,7 @@ app.use(
   proxy("http://localhost:3001", {
     proxyReqPathResolver: (req) => {
       const newPath = `/api/auth${req.url}`;
-      console.log(`🔀 User Service: ${newPath}`);
+      console.log(`📤 User Service: ${newPath}`);
       return newPath;
     },
   })
@@ -43,7 +43,18 @@ app.use(
   proxy("http://localhost:3001", {
     proxyReqPathResolver: (req) => {
       const newPath = `/api/reminders${req.url}`;
-      console.log(`🔀 User Service: ${newPath}`);
+      console.log(`📤 User Service: ${newPath}`);
+      return newPath;
+    },
+  })
+);
+
+app.use(
+  "/api/friends",
+  proxy("http://localhost:3001", {
+    proxyReqPathResolver: (req) => {
+      const newPath = `/api/friends${req.url}`;
+      console.log(`📤 User Service (Friends): ${newPath}`);
       return newPath;
     },
   })
@@ -57,7 +68,7 @@ app.use(
       // Eliminar cualquier barra final
       const cleanUrl = req.url === "/" ? "" : req.url;
       const newPath = `/api/geocode${cleanUrl}`;
-      console.log(`🔀 Geo Service: ${newPath}`);
+      console.log(`📤 Geo Service: ${newPath}`);
       return newPath;
     },
   })
@@ -68,7 +79,7 @@ app.use(
   proxy("http://127.0.0.1:8000", {
     proxyReqPathResolver: (req) => {
       const newPath = `/api/locations${req.url}`;
-      console.log(`🔀 Geo Service: ${newPath}`);
+      console.log(`📤 Geo Service: ${newPath}`);
       return newPath;
     },
   })
