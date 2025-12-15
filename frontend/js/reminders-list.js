@@ -14,13 +14,177 @@ if (!token || !currentUser) {
 const welcomeMessage = document.getElementById("welcomeMessage");
 const newReminderBtn = document.getElementById("newReminderBtn");
 const remindersList = document.getElementById("remindersList");
-const logoutBtn = document.getElementById("logoutBtn");
 const calendarBtn = document.getElementById("calendarBtn");
 
 const searchContainer = document.getElementById("searchContainer");
 const searchToggleBtn = document.getElementById("searchToggleBtn");
 const searchInput = document.getElementById("searchInput");
 const clearSearchBtn = document.getElementById("clearSearchBtn");
+
+// ===== AVATAR DEL USUARIO =====
+
+// Generar color consistente basado en el email
+function generateAvatarColor(email) {
+  const colors = [
+    "#6366f1", // indigo
+    "#8b5cf6", // violet
+    "#d946ef", // fuchsia
+    "#ec4899", // pink
+    "#f43f5e", // rose
+    "#ef4444", // red
+    "#f97316", // orange
+    "#eab308", // yellow
+    "#84cc16", // lime
+    "#22c55e", // green
+    "#14b8a6", // teal
+    "#06b6d4", // cyan
+    "#0ea5e9", // sky
+    "#3b82f6", // blue
+  ];
+
+  // Usar el email para generar un índice consistente
+  let hash = 0;
+  for (let i = 0; i < email.length; i++) {
+    hash = email.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  return colors[Math.abs(hash) % colors.length];
+}
+
+// Obtener inicial del usuario
+function getUserInitial(name, email) {
+  if (name && name.trim()) {
+    return name.trim().charAt(0).toUpperCase();
+  }
+  if (email && email.trim()) {
+    return email.trim().charAt(0).toUpperCase();
+  }
+  return "?";
+}
+
+// Inicializar avatar
+function initUserAvatar() {
+  const avatar = document.getElementById("userAvatar");
+  const dropdownAvatar = document.getElementById("dropdownAvatar");
+  const dropdownUserName = document.getElementById("dropdownUserName");
+  const dropdownUserEmail = document.getElementById("dropdownUserEmail");
+  const avatarContainer = document.getElementById("userAvatarContainer");
+
+  if (!currentUser || !avatar) return;
+
+  const initial = getUserInitial(currentUser.name, currentUser.email);
+  const color = generateAvatarColor(currentUser.email);
+
+  // Aplicar al avatar del header
+  avatar.textContent = initial;
+  avatar.style.backgroundColor = color;
+
+  // Aplicar al avatar del dropdown
+  if (dropdownAvatar) {
+    dropdownAvatar.textContent = initial;
+  }
+
+  // Info del usuario en dropdown
+  if (dropdownUserName) {
+    dropdownUserName.textContent = currentUser.name || "Usuario";
+  }
+  if (dropdownUserEmail) {
+    dropdownUserEmail.textContent = currentUser.email || "";
+  }
+
+  // Toggle dropdown al hacer click
+  avatar.addEventListener("click", (e) => {
+    e.stopPropagation();
+    avatarContainer.classList.toggle("active");
+  });
+
+  // Cerrar dropdown al hacer click fuera
+  document.addEventListener("click", (e) => {
+    if (!avatarContainer.contains(e.target)) {
+      avatarContainer.classList.remove("active");
+    }
+  });
+
+  // Cerrar con ESC
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      avatarContainer.classList.remove("active");
+    }
+  });
+
+  // Logout desde dropdown
+  const dropdownLogoutBtn = document.getElementById("dropdownLogoutBtn");
+  if (dropdownLogoutBtn) {
+    dropdownLogoutBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      avatarContainer.classList.remove("active");
+
+      const title =
+        typeof t === "function"
+          ? t("confirmLogout")
+          : "¿Seguro que quieres cerrar sesión?";
+      const message =
+        typeof t === "function"
+          ? t("sessionWillClose")
+          : "Se cerrará tu sesión actual";
+
+      const confirmed = await showConfirm(message, title, "🚪");
+
+      if (confirmed) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "index.html";
+      }
+    });
+  }
+
+  // Perfil (por ahora muestra info)
+  const profileBtn = document.getElementById("profileBtn");
+  if (profileBtn) {
+    profileBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      avatarContainer.classList.remove("active");
+      const profileTitle =
+        typeof t === "function" ? t("myProfile") : "Mi Perfil";
+      const profileMsg = `Nombre: ${currentUser.name}\nEmail: ${currentUser.email}`;
+      showInfo(profileMsg, profileTitle, "👤");
+    });
+  }
+
+  // Amigos (próximamente)
+  const friendsBtn = document.getElementById("friendsBtn");
+  if (friendsBtn) {
+    friendsBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      avatarContainer.classList.remove("active");
+      const comingSoonTitle =
+        typeof t === "function" ? t("comingSoon") : "Próximamente";
+      const comingSoonMsg =
+        typeof t === "function"
+          ? t("friendsComingSoon")
+          : "La funcionalidad de amigos estará disponible pronto";
+      showInfo(comingSoonMsg, comingSoonTitle, "👥");
+    });
+  }
+
+  // Configuración (próximamente)
+  const settingsBtn = document.getElementById("settingsBtn");
+  if (settingsBtn) {
+    settingsBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      avatarContainer.classList.remove("active");
+      const comingSoonTitle =
+        typeof t === "function" ? t("comingSoon") : "Próximamente";
+      const comingSoonMsg =
+        typeof t === "function"
+          ? t("settingsComingSoon")
+          : "La configuración estará disponible pronto";
+      showInfo(comingSoonMsg, comingSoonTitle, "⚙️");
+    });
+  }
+}
+
+// ===== FIN AVATAR =====
 
 // Función para actualizar el saludo
 function updateWelcomeMessage() {
@@ -36,32 +200,13 @@ document.addEventListener("DOMContentLoaded", () => {
   initLanguageSelector("langContainer");
   applyTranslations();
   updateWelcomeMessage();
+  initUserAvatar(); // Inicializar avatar
 });
 
 // Actualizar cuando cambie el idioma
 document.addEventListener("languageChanged", () => {
   updateWelcomeMessage();
   renderReminders();
-});
-
-// Logout
-logoutBtn.addEventListener("click", async () => {
-  const title =
-    typeof t === "function"
-      ? t("confirmLogout")
-      : "¿Seguro que quieres cerrar sesión?";
-  const message =
-    typeof t === "function"
-      ? t("sessionWillClose")
-      : "Se cerrará tu sesión actual";
-
-  const confirmed = await showConfirm(message, title, "🚪");
-
-  if (confirmed) {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    window.location.href = "index.html";
-  }
 });
 
 // Ir a crear nuevo recordatorio
