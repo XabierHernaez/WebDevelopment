@@ -6,6 +6,7 @@ require("dotenv").config();
 const userRoutes = require("./routes/userRoutes");
 const reminderRoutes = require("./routes/reminderRoutes");
 const friendRoutes = require("./routes/friendRoutes");
+const groupRoutes = require("./routes/groupRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -35,6 +36,9 @@ app.use("/api/reminders", reminderRoutes);
 
 // Rutas de amigos
 app.use("/api/friends", friendRoutes);
+
+// Rutas de grupos
+app.use("/api/groups", groupRoutes);
 
 // Iniciar servidor
 app.listen(PORT, () => {

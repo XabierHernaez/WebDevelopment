@@ -60,6 +60,17 @@ app.use(
   })
 );
 
+app.use(
+  "/api/groups",
+  proxy("http://localhost:3001", {
+    proxyReqPathResolver: (req) => {
+      const newPath = `/api/groups${req.url}`;
+      console.log(`📤 User Service (Groups): ${newPath}`);
+      return newPath;
+    },
+  })
+);
+
 // ===== PROXY A GEO SERVICE (Puerto 8000) =====
 app.use(
   "/api/geocode",
