@@ -151,22 +151,6 @@ function initUserAvatar() {
     });
   }
 
-  // Amigos (próximamente)
-  const friendsBtn = document.getElementById("friendsBtn");
-  if (friendsBtn) {
-    friendsBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      avatarContainer.classList.remove("active");
-      const comingSoonTitle =
-        typeof t === "function" ? t("comingSoon") : "Próximamente";
-      const comingSoonMsg =
-        typeof t === "function"
-          ? t("friendsComingSoon")
-          : "La funcionalidad de amigos estará disponible pronto";
-      showInfo(comingSoonMsg, comingSoonTitle, "👥");
-    });
-  }
-
   // Configuración (próximamente)
   const settingsBtn = document.getElementById("settingsBtn");
   if (settingsBtn) {
@@ -358,6 +342,80 @@ function formatGroupDate(date) {
   }
 }
 
+// ===== FUNCIONES PARA BADGES DE COMPARTIDO =====
+
+// Generar badge de compartido
+function getSharedBadge(reminder) {
+  // Si NO es propietario, mostrar quién lo compartió
+  if (!reminder.is_owner) {
+    const sharedByName = reminder.shared_by_name || "Alguien";
+
+    if (reminder.shared_via_group === "group" && reminder.group_name) {
+      // Compartido a través de un grupo
+      const groupColor = reminder.group_color || "#6366f1";
+      return `
+        <span class="shared-badge shared-from-group" style="--group-color: ${groupColor}">
+          <span class="shared-icon">👨‍👩‍👧‍👦</span>
+          <span class="shared-text">${reminder.group_name}</span>
+          <span class="shared-by">de ${sharedByName}</span>
+        </span>
+      `;
+    } else {
+      // Compartido directamente por un amigo
+      const avatarColor = generateAvatarColor(reminder.shared_by_email || "");
+      const initial = sharedByName.charAt(0).toUpperCase();
+      return `
+        <span class="shared-badge shared-from-friend">
+          <span class="shared-avatar" style="background-color: ${avatarColor}">${initial}</span>
+          <span class="shared-text">de ${sharedByName}</span>
+        </span>
+      `;
+    }
+  }
+
+  // Si ES propietario y está compartido, mostrar con quién
+  if (reminder.is_owner && reminder.is_shared) {
+    const friendCount = reminder.shared_with_friends?.length || 0;
+    const groupCount = reminder.shared_with_groups?.length || 0;
+
+    let badgeContent = [];
+
+    if (groupCount > 0) {
+      const groupNames = reminder.shared_with_groups
+        .map((g) => g.name)
+        .join(", ");
+      badgeContent.push(`
+        <span class="shared-badge shared-to-group" title="Compartido con: ${groupNames}">
+          <span class="shared-icon">👨‍👩‍👧‍👦</span>
+          <span class="shared-text">${groupCount} grupo${
+        groupCount > 1 ? "s" : ""
+      }</span>
+        </span>
+      `);
+    }
+
+    if (friendCount > 0) {
+      const friendNames = reminder.shared_with_friends
+        .map((f) => f.name)
+        .join(", ");
+      badgeContent.push(`
+        <span class="shared-badge shared-to-friends" title="Compartido con: ${friendNames}">
+          <span class="shared-icon">👥</span>
+          <span class="shared-text">${friendCount} amigo${
+        friendCount > 1 ? "s" : ""
+      }</span>
+        </span>
+      `);
+    }
+
+    return badgeContent.join("");
+  }
+
+  return "";
+}
+
+// ===== FIN FUNCIONES COMPARTIDO =====
+
 // Renderizar recordatorios agrupados por fecha
 function renderReminders() {
   const noRemindersTitle =
@@ -422,6 +480,11 @@ function renderReminders() {
 
       const completedClass = reminder.is_completed ? "completed" : "";
       const notifiedClass = reminder.is_notified ? "notified" : "";
+      const sharedClass = !reminder.is_owner
+        ? "shared-with-me"
+        : reminder.is_shared
+        ? "shared-by-me"
+        : "";
 
       let emoji = "📌";
       if (reminder.reminder_type === "location") emoji = "📍";
@@ -433,6 +496,9 @@ function renderReminders() {
             reminder.recurrence_pattern
           )} ${getRecurrenceLabel(reminder.recurrence_pattern)}</span>`
         : "";
+
+      // Badge de compartido
+      const sharedBadge = getSharedBadge(reminder);
 
       const deactivateText =
         typeof t === "function"
@@ -446,8 +512,31 @@ function renderReminders() {
         typeof t === "function" ? t("complete") : "Completar";
       const deleteText = typeof t === "function" ? t("delete") : "Eliminar";
 
+      // Solo mostrar botón de eliminar si es propietario
+      const deleteButton = reminder.is_owner
+        ? `<button class="btn-action" onclick="deleteReminder(${reminder.id})" title="${deleteText}">
+            🗑️
+          </button>`
+        : "";
+
+      // Solo mostrar botón de recurrencia si es propietario
+      const recurrenceButton =
+        reminder.is_owner && !reminder.is_completed
+          ? `<button class="btn-action ${
+              reminder.is_recurring ? "recurring-active" : ""
+            }" 
+                    onclick="toggleRecurrence(${reminder.id}, ${
+              reminder.is_recurring
+            })" 
+                    title="${
+                      reminder.is_recurring ? deactivateText : makeRecurrentText
+                    }">
+                🔄
+            </button>`
+          : "";
+
       html += `
-        <div class="reminder-item ${typeClass} ${completedClass} ${notifiedClass}" data-id="${
+        <div class="reminder-item ${typeClass} ${completedClass} ${notifiedClass} ${sharedClass}" data-id="${
         reminder.id
       }">
           <div class="reminder-header">
@@ -457,25 +546,7 @@ function renderReminders() {
               ${recurrenceBadge}
             </h3>
             <div class="reminder-actions">
-              ${
-                !reminder.is_completed
-                  ? `
-                <button class="btn-action ${
-                  reminder.is_recurring ? "recurring-active" : ""
-                }" 
-                        onclick="toggleRecurrence(${reminder.id}, ${
-                      reminder.is_recurring
-                    })" 
-                        title="${
-                          reminder.is_recurring
-                            ? deactivateText
-                            : makeRecurrentText
-                        }">
-                    🔄
-                </button>
-              `
-                  : ""
-              }
+              ${recurrenceButton}
               <button class="btn-action" onclick="toggleComplete(${
                 reminder.id
               }, ${!reminder.is_completed})" title="${
@@ -483,13 +554,15 @@ function renderReminders() {
       }">
                 ${reminder.is_completed ? "↩️" : "✅"}
               </button>
-              <button class="btn-action" onclick="deleteReminder(${
-                reminder.id
-              })" title="${deleteText}">
-                🗑️
-              </button>
+              ${deleteButton}
             </div>
           </div>
+
+          ${
+            sharedBadge
+              ? `<div class="reminder-shared-info">${sharedBadge}</div>`
+              : ""
+          }
 
           ${
             reminder.description
@@ -599,15 +672,15 @@ async function toggleRecurrence(id, isCurrentlyRecurring) {
       const data = await response.json();
 
       if (data.success) {
-        const successMsg =
-          typeof t === "function"
-            ? t("recurrenceDeactivated")
-            : "El recordatorio ya no se repetirá";
         const successTitle =
           typeof t === "function"
-            ? t("recurrenceDeactivatedTitle")
+            ? t("recurrenceDeactivated")
             : "Recurrencia desactivada";
-        await showSuccess(successMsg, successTitle, "✅");
+        await showSuccess(
+          "El recordatorio ya no se repetirá automáticamente",
+          successTitle,
+          "✅"
+        );
         loadReminders();
       } else {
         await showError(data.message || "Error al desactivar recurrencia");
@@ -621,28 +694,26 @@ async function toggleRecurrence(id, isCurrentlyRecurring) {
   }
 }
 
-// Modal de selección de recurrencia
+// Modal para seleccionar patrón de recurrencia
 function showRecurrenceModal(reminderId, reminder) {
-  const overlay = document.createElement("div");
-  overlay.className = "custom-modal-overlay show";
-
-  const hasDateTime = Boolean(reminder.datetime);
-
-  const makeRecurrentTitle =
-    typeof t === "function" ? t("makeRecurrent") : "Hacer recurrente";
-  const cancelText = typeof t === "function" ? t("cancel") : "Cancelar";
-  const activateText =
-    typeof t === "function" ? t("activateRecurrence") : "Activar recurrencia";
   const dailyText = typeof t === "function" ? t("daily") : "Diaria";
   const weeklyText = typeof t === "function" ? t("weekly") : "Semanal";
   const monthlyText = typeof t === "function" ? t("monthly") : "Mensual";
   const yearlyText = typeof t === "function" ? t("yearly") : "Anual";
+  const cancelText = typeof t === "function" ? t("cancel") : "Cancelar";
+  const activateText =
+    typeof t === "function" ? t("activateRecurrence") : "Activar recurrencia";
 
+  const hasDateTime =
+    reminder.datetime && reminder.reminder_type !== "location";
+
+  const overlay = document.createElement("div");
+  overlay.className = "custom-modal-overlay show";
   overlay.innerHTML = `
-    <div class="custom-modal">
+    <div class="custom-modal recurrence-modal">
       <div class="custom-modal-header info">
         <div class="custom-modal-icon">🔄</div>
-        <h2>${makeRecurrentTitle}</h2>
+        <h2>${activateText}</h2>
       </div>
       <div class="custom-modal-body">
         <p style="margin-bottom: 20px;">El recordatorio "<strong>${

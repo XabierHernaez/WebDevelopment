@@ -1,0 +1,134 @@
+/* ===== ESTILOS DE RECORDATORIOS COMPARTIDOS ===== */
+
+/* Recordatorio compartido conmigo (recibido) */
+.reminder-item.shared-with-me {
+  border-left: 4px solid #8b5cf6;
+  background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
+}
+
+.reminder-item.shared-with-me:hover {
+  background: linear-gradient(135deg, #f3e8ff 0%, #ede9fe 100%);
+}
+
+/* Recordatorio que yo he compartido */
+.reminder-item.shared-by-me {
+  border-left: 4px solid #10b981;
+}
+
+/* Contenedor de info de compartido */
+.reminder-shared-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 12px 0;
+}
+
+/* Badge base de compartido */
+.shared-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Badge: compartido DESDE un grupo (recibido) */
+.shared-badge.shared-from-group {
+  background: linear-gradient(
+    135deg,
+    var(--group-color, #6366f1) 0%,
+    color-mix(in srgb, var(--group-color, #6366f1), #000 20%) 100%
+  );
+  color: white;
+}
+
+.shared-badge.shared-from-group .shared-icon {
+  font-size: 0.9rem;
+}
+
+.shared-badge.shared-from-group .shared-text {
+  font-weight: 600;
+}
+
+.shared-badge.shared-from-group .shared-by {
+  opacity: 0.85;
+  font-weight: 400;
+  font-size: 0.75rem;
+}
+
+/* Badge: compartido DESDE un amigo (recibido) */
+.shared-badge.shared-from-friend {
+  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+  color: #6b21a8;
+  border: 1px solid #d8b4fe;
+}
+
+.shared-badge.shared-from-friend .shared-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+}
+
+.shared-badge.shared-from-friend .shared-text {
+  color: #7c3aed;
+}
+
+/* Badge: compartido CON grupos (enviado) */
+.shared-badge.shared-to-group {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.shared-badge.shared-to-group .shared-icon {
+  font-size: 0.85rem;
+}
+
+/* Badge: compartido CON amigos (enviado) */
+.shared-badge.shared-to-friends {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.shared-badge.shared-to-friends .shared-icon {
+  font-size: 0.85rem;
+}
+
+/* Hover en badges */
+.shared-badge.shared-to-group:hover,
+.shared-badge.shared-to-friends:hover {
+  transform: scale(1.02);
+  cursor: default;
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 768px) {
+  .reminder-shared-info {
+    margin: 6px 0 10px 0;
+  }
+
+  .shared-badge {
+    padding: 3px 8px;
+    font-size: 0.75rem;
+  }
+
+  .shared-badge .shared-avatar {
+    width: 18px;
+    height: 18px;
+    font-size: 9px;
+  }
+
+  .shared-badge.shared-from-group .shared-by {
+    display: none;
+  }
+}
