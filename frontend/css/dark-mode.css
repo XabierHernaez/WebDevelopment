@@ -1,0 +1,515 @@
+/* ===== TEMA OSCURO - ESTILOS GLOBALES ===== */
+
+/* Variables del tema oscuro */
+body.dark-mode {
+  --dark: #f9fafb;
+  --light: #1f2937;
+  --border: #374151;
+  --shadow: rgba(0, 0, 0, 0.3);
+}
+
+/* Fondo general */
+body.dark-mode {
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  color: #f9fafb;
+}
+
+/* ===== AUTENTICACIÓN ===== */
+
+body.dark-mode.auth-page {
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+}
+
+body.dark-mode .auth-card {
+  background: #1f2937;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .auth-header p {
+  color: #9ca3af;
+}
+
+body.dark-mode .auth-form h2 {
+  color: #f9fafb;
+}
+
+body.dark-mode .form-group label {
+  color: #f9fafb;
+}
+
+body.dark-mode .form-group input,
+body.dark-mode .form-group textarea,
+body.dark-mode .form-group select {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+body.dark-mode .form-group input:focus,
+body.dark-mode .form-group textarea:focus,
+body.dark-mode .form-group select:focus {
+  border-color: var(--primary);
+}
+
+body.dark-mode .form-group input::placeholder {
+  color: #6b7280;
+}
+
+body.dark-mode .switch-form {
+  color: #9ca3af;
+}
+
+/* ===== HEADER ===== */
+
+body.dark-mode .header-gradient {
+  background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+}
+
+body.dark-mode .header {
+  background: #1f2937;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== LISTA DE RECORDATORIOS ===== */
+
+body.dark-mode.reminders-list-page {
+  background: #111827;
+}
+
+body.dark-mode .container {
+  background: transparent;
+}
+
+body.dark-mode .welcome-section h2 {
+  color: #f9fafb;
+}
+
+body.dark-mode .reminder-item {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+body.dark-mode .reminder-item:hover {
+  background: #374151;
+  border-color: var(--primary);
+}
+
+body.dark-mode .reminder-item.completed {
+  opacity: 0.5;
+}
+
+body.dark-mode .reminder-title {
+  color: #f9fafb;
+}
+
+body.dark-mode .reminder-description {
+  color: #9ca3af;
+}
+
+body.dark-mode .reminder-meta {
+  color: #9ca3af;
+}
+
+body.dark-mode .meta-item {
+  background: #374151;
+  color: #d1d5db;
+}
+
+body.dark-mode .date-group-header {
+  color: #9ca3af;
+  border-bottom-color: #374151;
+}
+
+body.dark-mode .recurrence-badge {
+  background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+  color: #d1d5db;
+}
+
+/* Botones de acción */
+body.dark-mode .btn-action {
+  background: #374151;
+}
+
+body.dark-mode .btn-action:hover {
+  background: #4b5563;
+}
+
+/* Buscador */
+body.dark-mode .search-input {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+body.dark-mode .search-input::placeholder {
+  color: #6b7280;
+}
+
+/* Botones */
+body.dark-mode .btn-calendar {
+  background: #374151;
+  color: #f9fafb;
+  border-color: #4b5563;
+}
+
+body.dark-mode .btn-calendar:hover {
+  background: #4b5563;
+}
+
+/* Estado vacío */
+body.dark-mode .empty-state,
+body.dark-mode .no-results-message {
+  color: #9ca3af;
+}
+
+body.dark-mode .empty-state h3,
+body.dark-mode .no-results-message h3 {
+  color: #f9fafb;
+}
+
+/* ===== CREAR RECORDATORIO ===== */
+
+body.dark-mode.create-reminder-page {
+  background: #111827;
+}
+
+body.dark-mode .form-section {
+  background: #1f2937;
+}
+
+body.dark-mode .map-section {
+  background: #374151;
+}
+
+body.dark-mode .info-panel {
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+body.dark-mode .info-panel h3 {
+  color: #f9fafb;
+}
+
+body.dark-mode .info-panel p,
+body.dark-mode .info-panel li {
+  color: #9ca3af;
+}
+
+body.dark-mode .location-info {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+body.dark-mode .location-address {
+  color: #f9fafb;
+}
+
+body.dark-mode .location-coords {
+  color: #9ca3af;
+}
+
+/* Recurrencia */
+body.dark-mode .recurrence-radio .radio-content {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+body.dark-mode .recurrence-radio input:checked + .radio-content {
+  border-color: var(--primary);
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.2) 0%,
+    rgba(139, 92, 246, 0.2) 100%
+  );
+}
+
+/* Sección de compartir */
+body.dark-mode .share-section {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+body.dark-mode .share-category-title {
+  color: #f9fafb;
+}
+
+body.dark-mode .share-chip {
+  background: #1f2937;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+body.dark-mode .share-chip:hover {
+  border-color: #6366f1;
+  background: #374151;
+}
+
+body.dark-mode .share-chip.selected {
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.3) 0%,
+    rgba(139, 92, 246, 0.3) 100%
+  );
+}
+
+body.dark-mode .share-chip-name {
+  color: #f9fafb;
+}
+
+/* ===== CALENDARIO ===== */
+
+body.dark-mode .calendar-container {
+  background: #1f2937;
+}
+
+body.dark-mode .calendar-header {
+  color: #f9fafb;
+}
+
+body.dark-mode .calendar-day {
+  background: #374151;
+  color: #f9fafb;
+  border-color: #4b5563;
+}
+
+body.dark-mode .calendar-day:hover {
+  background: #4b5563;
+}
+
+body.dark-mode .calendar-day.today {
+  border-color: var(--primary);
+}
+
+body.dark-mode .calendar-day.other-month {
+  color: #6b7280;
+  background: #1f2937;
+}
+
+/* ===== MODALES ===== */
+
+body.dark-mode .custom-modal {
+  background: #1f2937;
+}
+
+body.dark-mode .custom-modal-body {
+  color: #d1d5db;
+}
+
+body.dark-mode .custom-modal-body p {
+  color: #d1d5db;
+}
+
+body.dark-mode .custom-modal-btn.secondary {
+  background: #374151;
+  color: #f9fafb;
+}
+
+body.dark-mode .custom-modal-btn.secondary:hover {
+  background: #4b5563;
+}
+
+/* Modal de amigos */
+body.dark-mode .friends-modal .custom-modal-body {
+  background: #1f2937;
+}
+
+body.dark-mode .friends-tabs {
+  background: #111827;
+  border-bottom-color: #374151;
+}
+
+body.dark-mode .friends-tab {
+  color: #9ca3af;
+}
+
+body.dark-mode .friends-tab:hover {
+  color: var(--primary);
+  background: #1f2937;
+}
+
+body.dark-mode .friends-tab.active {
+  color: var(--primary);
+}
+
+body.dark-mode .friends-tab-content {
+  background: #1f2937;
+}
+
+body.dark-mode .friend-item {
+  background: #374151;
+}
+
+body.dark-mode .friend-item:hover {
+  background: #4b5563;
+}
+
+body.dark-mode .friend-name {
+  color: #f9fafb;
+}
+
+body.dark-mode .friend-email {
+  color: #9ca3af;
+}
+
+body.dark-mode .friends-search-input {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+body.dark-mode .friends-search-hint {
+  color: #6b7280;
+}
+
+body.dark-mode .friends-empty {
+  color: #9ca3af;
+}
+
+body.dark-mode .friends-empty h4 {
+  color: #f9fafb;
+}
+
+/* Grupos */
+body.dark-mode .group-form-header h3 {
+  color: #f9fafb;
+}
+
+body.dark-mode .btn-back-small {
+  background: #374151;
+  color: #f9fafb;
+}
+
+body.dark-mode .btn-back-small:hover {
+  background: #4b5563;
+}
+
+body.dark-mode .friends-to-add {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+body.dark-mode .friend-checkbox:hover {
+  background: #4b5563;
+}
+
+body.dark-mode .friend-checkbox-name {
+  color: #f9fafb;
+}
+
+body.dark-mode .group-detail-title h3 {
+  color: #f9fafb;
+}
+
+body.dark-mode .group-description {
+  color: #9ca3af;
+}
+
+body.dark-mode .group-members-section h4 {
+  color: #f9fafb;
+}
+
+body.dark-mode .add-member-modal {
+  background: #1f2937;
+}
+
+body.dark-mode .add-member-modal h4 {
+  color: #f9fafb;
+}
+
+body.dark-mode .btn-cancel {
+  background: #374151;
+  color: #f9fafb;
+}
+
+/* ===== NOTIFICACIONES ===== */
+
+body.dark-mode .notification-modal {
+  background: #1f2937;
+}
+
+body.dark-mode .notification-body {
+  color: #d1d5db;
+}
+
+body.dark-mode .notification-body h3 {
+  color: #f9fafb;
+}
+
+body.dark-mode .notification-time,
+body.dark-mode .notification-location {
+  background: #374151;
+  color: #d1d5db;
+}
+
+/* ===== DROPDOWN DEL USUARIO ===== */
+
+body.dark-mode .user-dropdown {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .dropdown-header {
+  border-bottom-color: #374151;
+}
+
+body.dark-mode .dropdown-user-name {
+  color: #f9fafb;
+}
+
+body.dark-mode .dropdown-user-email {
+  color: #9ca3af;
+}
+
+body.dark-mode .dropdown-divider {
+  background: #374151;
+}
+
+body.dark-mode .dropdown-item {
+  color: #d1d5db;
+}
+
+body.dark-mode .dropdown-item:hover {
+  background: #374151;
+  color: #f9fafb;
+}
+
+body.dark-mode .dropdown-item.logout:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* ===== SCROLLBAR ===== */
+
+body.dark-mode ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+body.dark-mode ::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* ===== TRANSICIÓN SUAVE ===== */
+
+body,
+body * {
+  transition: background-color 0.3s ease, border-color 0.3s ease,
+    color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Excluir animaciones de elementos que no deben tener transición */
+body .settings-toggle-slider::before,
+body input,
+body button {
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}

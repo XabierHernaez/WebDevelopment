@@ -4,6 +4,15 @@ let shownNotifications = new Set();
 
 // Iniciar el sistema de notificaciones
 function startNotificationSystem() {
+  // Verificar si las notificaciones están habilitadas
+  if (
+    typeof areNotificationsEnabled === "function" &&
+    !areNotificationsEnabled()
+  ) {
+    console.log("🔕 Notificaciones deshabilitadas en configuración");
+    return;
+  }
+
   console.log("🔔 Sistema de notificaciones iniciado");
   notificationCheckInterval = setInterval(checkReminders, 30000);
   checkReminders();
@@ -19,6 +28,14 @@ function stopNotificationSystem() {
 
 // Verificar recordatorios pendientes
 async function checkReminders() {
+  // Verificar si las notificaciones están habilitadas
+  if (
+    typeof areNotificationsEnabled === "function" &&
+    !areNotificationsEnabled()
+  ) {
+    return;
+  }
+
   const token = localStorage.getItem("token");
   if (!token) return;
 
@@ -60,7 +77,13 @@ async function checkReminders() {
 function showNotification(reminder) {
   console.log("🔔 Mostrando notificación para:", reminder.title);
 
-  playNotificationSound();
+  // Reproducir sonido solo si está habilitado
+  if (
+    typeof isNotificationSoundEnabled !== "function" ||
+    isNotificationSoundEnabled()
+  ) {
+    playNotificationSound();
+  }
 
   const lang = typeof getLanguage === "function" ? getLanguage() : "es";
   const locale = lang === "en" ? "en-US" : "es-ES";
@@ -261,173 +284,144 @@ function closeNotification(overlay) {
 
 // Reproducir sonido de notificación
 function playNotificationSound() {
+  // Verificar si el sonido está habilitado en settings
+  if (
+    typeof isNotificationSoundEnabled === "function" &&
+    !isNotificationSoundEnabled()
+  ) {
+    return;
+  }
+
   try {
     const audioContext = new (window.AudioContext ||
       window.webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
+
+    // Crear osciladores para un sonido agradable
+    const oscillator1 = audioContext.createOscillator();
+    const oscillator2 = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
-    oscillator.connect(gainNode);
+    oscillator1.connect(gainNode);
+    oscillator2.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
-    oscillator.frequency.value = 800;
-    oscillator.type = "sine";
+    // Configurar frecuencias (acorde agradable)
+    oscillator1.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+    oscillator2.frequency.setValueAtTime(659.25, audioContext.currentTime); // E5
 
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(
-      0.01,
-      audioContext.currentTime + 0.5
-    );
+    oscillator1.type = "sine";
+    oscillator2.type = "sine";
 
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.5);
+    // Envelope del volumen
+    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.1);
+    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.5);
+
+    // Reproducir
+    oscillator1.start(audioContext.currentTime);
+    oscillator2.start(audioContext.currentTime);
+    oscillator1.stop(audioContext.currentTime + 0.5);
+    oscillator2.stop(audioContext.currentTime + 0.5);
   } catch (error) {
-    console.log("No se pudo reproducir sonido");
+    console.log("No se pudo reproducir sonido:", error);
   }
 }
 
-// ========== GEOFENCING (Verificación de ubicación) ==========
+// ===== GEOFENCING =====
 
 let geofencingInterval = null;
 let shownLocationNotifications = new Set();
 
-async function startGeofencing() {
-  console.log("📍 Sistema de geofencing iniciado");
-
-  const browserPermission = await checkBrowserPermission();
-
-  if (browserPermission === "granted") {
-    console.log("✅ Permisos ya concedidos previamente");
-    geofencingInterval = setInterval(checkLocationReminders, 10000);
-    checkLocationReminders();
+// Iniciar el sistema de geofencing
+function startGeofencing() {
+  // Verificar si las notificaciones están habilitadas
+  if (
+    typeof areNotificationsEnabled === "function" &&
+    !areNotificationsEnabled()
+  ) {
+    console.log("🔕 Geofencing deshabilitado (notificaciones deshabilitadas)");
     return;
   }
 
-  if (browserPermission === "denied") {
-    console.log("⚠️ Permisos denegados por el usuario");
-    return;
-  }
+  console.log("🌍 Iniciando sistema de geofencing");
 
-  const alreadyAsked = checkLocationPermission();
+  // Verificar si ya preguntamos por permisos
+  const permissionAsked = localStorage.getItem("location_permission_asked");
 
-  if (alreadyAsked) {
-    console.log("🔕 Ya se solicitaron permisos anteriormente");
-    return;
+  if (!permissionAsked) {
+    // Mostrar modal explicativo primero
+    showLocationPermissionModal();
   } else {
-    showPermissionRequestModal();
+    // Ya preguntamos antes, intentar iniciar
+    startLocationChecking();
   }
 }
 
-// Verificar permisos del navegador
-async function checkBrowserPermission() {
-  if (!navigator.permissions) {
-    return "prompt";
-  }
-
-  try {
-    const result = await navigator.permissions.query({ name: "geolocation" });
-    return result.state;
-  } catch (error) {
-    console.log("No se pudo verificar permisos del navegador");
-    return "prompt";
-  }
-}
-
-// Verificar si ya preguntamos por permisos
-function checkLocationPermission() {
-  const alreadyAsked = localStorage.getItem("location_permission_asked");
-  return alreadyAsked === "true";
-}
-
-// Mostrar modal de solicitud de permisos
-function showPermissionRequestModal() {
+// Mostrar modal para pedir permisos de ubicación
+function showLocationPermissionModal() {
   const lang = typeof getLanguage === "function" ? getLanguage() : "es";
 
-  // Traducciones
-  const texts = {
-    es: {
-      title: "Ubicación Requerida",
-      subtitle: "GeoRemind necesita tu ubicación",
-      description:
-        "Para notificarte cuando te acerques a tus recordatorios guardados, necesitamos acceso a tu ubicación.",
-      feature1: "Recordatorios automáticos al acercarte a un lugar",
-      feature2: "Centrado automático del mapa en tu posición",
-      feature3: "Tu ubicación es privada y segura",
-      denyBtn: "Ahora no",
-      allowBtn: "✓ Permitir ubicación",
-      note: "Solo se te preguntará esta vez. Puedes cambiar los permisos desde la configuración del navegador.",
-    },
-    en: {
-      title: "Location Required",
-      subtitle: "GeoRemind needs your location",
-      description:
-        "To notify you when you approach your saved reminders, we need access to your location.",
-      feature1: "Automatic reminders when approaching a place",
-      feature2: "Automatic map centering on your position",
-      feature3: "Your location is private and secure",
-      denyBtn: "Not now",
-      allowBtn: "✓ Allow location",
-      note: "You will only be asked this once. You can change permissions from your browser settings.",
-    },
-  };
+  const title = lang === "en" ? "Enable Location?" : "¿Activar ubicación?";
+  const benefits =
+    lang === "en"
+      ? `
+      <p><strong>With location enabled, you can:</strong></p>
+      <ul>
+        <li>📍 Create reminders that activate when you arrive at a place</li>
+        <li>🔔 Receive automatic notifications when you're near</li>
+        <li>🗺️ See your position on the map</li>
+      </ul>
+      <p style="margin-top: 15px; color: #6b7280; font-size: 0.9em;">
+        Your location is only used for proximity reminders and is never shared.
+      </p>
+    `
+      : `
+      <p><strong>Con la ubicación activada podrás:</strong></p>
+      <ul>
+        <li>📍 Crear recordatorios que se activan al llegar a un lugar</li>
+        <li>🔔 Recibir notificaciones automáticas cuando estés cerca</li>
+        <li>🗺️ Ver tu posición en el mapa</li>
+      </ul>
+      <p style="margin-top: 15px; color: #6b7280; font-size: 0.9em;">
+        Tu ubicación solo se usa para los recordatorios de proximidad y nunca se comparte.
+      </p>
+    `;
 
-  const t = texts[lang] || texts.es;
+  const enableText = lang === "en" ? "Enable" : "Activar";
+  const laterText = lang === "en" ? "Maybe later" : "Quizás luego";
 
   const modal = document.createElement("div");
-  modal.className = "permission-modal-overlay";
+  modal.className = "custom-modal-overlay show";
   modal.innerHTML = `
-    <div class="permission-modal">
-      <div class="permission-header">
-        <div class="permission-icon">📍</div>
-        <h2>${t.title}</h2>
+    <div class="custom-modal">
+      <div class="custom-modal-header info">
+        <div class="custom-modal-icon">📍</div>
+        <h2>${title}</h2>
       </div>
-      
-      <div class="permission-body">
-        <h3>${t.subtitle}</h3>
-        <p>${t.description}</p>
-        
-        <div class="permission-features">
-          <div class="permission-feature">
-            <span class="permission-feature-icon">🔔</span>
-            <span class="permission-feature-text">${t.feature1}</span>
-          </div>
-          <div class="permission-feature">
-            <span class="permission-feature-icon">🗺️</span>
-            <span class="permission-feature-text">${t.feature2}</span>
-          </div>
-          <div class="permission-feature">
-            <span class="permission-feature-icon">🔒</span>
-            <span class="permission-feature-text">${t.feature3}</span>
-          </div>
-        </div>
+      <div class="custom-modal-body">
+        ${benefits}
       </div>
-      
-      <div class="permission-actions">
-        <button class="btn-permission btn-deny" id="denyPermissionBtn">
-          ${t.denyBtn}
+      <div class="custom-modal-actions">
+        <button class="custom-modal-btn secondary" id="locationLater">
+          ${laterText}
         </button>
-        <button class="btn-permission btn-allow" id="allowPermissionBtn">
-          ${t.allowBtn}
+        <button class="custom-modal-btn primary" id="locationEnable">
+          ${enableText}
         </button>
       </div>
-      
-      <p class="permission-note">${t.note}</p>
     </div>
   `;
 
   document.body.appendChild(modal);
 
-  document
-    .getElementById("allowPermissionBtn")
-    .addEventListener("click", () => {
-      requestLocationPermission(modal);
-    });
+  document.getElementById("locationEnable").onclick = () => {
+    requestLocationPermission(modal);
+  };
 
-  document.getElementById("denyPermissionBtn").addEventListener("click", () => {
+  document.getElementById("locationLater").onclick = () => {
     localStorage.setItem("location_permission_asked", "true");
     modal.remove();
-    console.log("Usuario rechazó permisos de ubicación");
-  });
+  };
 }
 
 // Solicitar permisos de ubicación
@@ -488,6 +482,14 @@ function startLocationChecking() {
 
 // Verificar recordatorios por ubicación
 async function checkLocationReminders() {
+  // Verificar si las notificaciones están habilitadas
+  if (
+    typeof areNotificationsEnabled === "function" &&
+    !areNotificationsEnabled()
+  ) {
+    return;
+  }
+
   const token = localStorage.getItem("token");
   if (!token) return;
 
@@ -511,6 +513,12 @@ async function checkLocationReminders() {
         const data = await response.json();
 
         if (data.success) {
+          // Obtener el radio de geofencing de la configuración
+          const geofencingRadius =
+            typeof getGeofencingRadius === "function"
+              ? getGeofencingRadius()
+              : 2; // 2km por defecto
+
           data.reminders.forEach(async (reminder) => {
             if (
               (reminder.reminder_type === "location" ||
@@ -532,10 +540,11 @@ async function checkLocationReminders() {
                 console.log(
                   `📏 Distancia a "${reminder.title}": ${distance.toFixed(
                     2
-                  )} km`
+                  )} km (radio: ${geofencingRadius} km)`
                 );
 
-                if (distance <= 2) {
+                // Usar el radio configurado
+                if (distance <= geofencingRadius) {
                   showLocationNotification(reminder, distance);
                   shownLocationNotifications.add(reminder.id);
                 }
@@ -611,7 +620,13 @@ function toRad(degrees) {
 function showLocationNotification(reminder, distance) {
   console.log("📍 Mostrando notificación de ubicación para:", reminder.title);
 
-  playNotificationSound();
+  // Reproducir sonido solo si está habilitado
+  if (
+    typeof isNotificationSoundEnabled !== "function" ||
+    isNotificationSoundEnabled()
+  ) {
+    playNotificationSound();
+  }
 
   const lang = typeof getLanguage === "function" ? getLanguage() : "es";
 

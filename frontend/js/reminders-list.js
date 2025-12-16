@@ -151,19 +151,16 @@ function initUserAvatar() {
     });
   }
 
-  // Configuración (próximamente)
+  // Configuración
   const settingsBtn = document.getElementById("settingsBtn");
   if (settingsBtn) {
     settingsBtn.addEventListener("click", (e) => {
       e.preventDefault();
       avatarContainer.classList.remove("active");
-      const comingSoonTitle =
-        typeof t === "function" ? t("comingSoon") : "Próximamente";
-      const comingSoonMsg =
-        typeof t === "function"
-          ? t("settingsComingSoon")
-          : "La configuración estará disponible pronto";
-      showInfo(comingSoonMsg, comingSoonTitle, "⚙️");
+      // Abrir modal de configuración
+      if (typeof openSettingsModal === "function") {
+        openSettingsModal();
+      }
     });
   }
 }
