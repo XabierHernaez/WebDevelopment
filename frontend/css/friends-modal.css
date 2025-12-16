@@ -1,4 +1,4 @@
-/* === MODAL DE AMIGOS === */
+/* === MODAL DE AMIGOS Y GRUPOS === */
 
 /* Modal más grande para amigos */
 .friends-modal {
@@ -22,19 +22,22 @@
   display: flex;
   border-bottom: 2px solid #e5e7eb;
   background: #f9fafb;
+  flex-wrap: wrap;
 }
 
 .friends-tab {
   flex: 1;
-  padding: 15px;
+  padding: 12px 8px;
   border: none;
   background: transparent;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: #6b7280;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
+  min-width: 0;
+  white-space: nowrap;
 }
 
 .friends-tab:hover {
@@ -60,10 +63,10 @@
 .friends-tab-badge {
   background: #ef4444;
   color: white;
-  font-size: 0.75rem;
-  padding: 2px 8px;
+  font-size: 0.7rem;
+  padding: 2px 6px;
   border-radius: 10px;
-  margin-left: 6px;
+  margin-left: 4px;
 }
 
 /* Contenido de tabs */
@@ -154,6 +157,10 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .friend-email {
@@ -305,7 +312,407 @@
   position: relative;
 }
 
-/* Responsive */
+/* ===== ESTILOS DE GRUPOS ===== */
+
+/* Botón crear grupo */
+.btn-create-group {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 16px;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  background: transparent;
+  color: #6366f1;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-create-group:hover {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.05);
+}
+
+/* Items de grupo */
+.group-item {
+  cursor: pointer;
+}
+
+.group-item:hover {
+  background: #eef2ff;
+}
+
+.group-avatar {
+  border-radius: 12px !important;
+}
+
+.group-role-badge {
+  font-size: 0.7rem;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.group-arrow {
+  color: #9ca3af;
+  font-size: 1.2rem;
+  transition: transform 0.2s ease;
+}
+
+.group-item:hover .group-arrow {
+  transform: translateX(5px);
+  color: #6366f1;
+}
+
+/* Formulario crear grupo */
+.group-form {
+  padding: 0;
+}
+
+.group-form-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.group-form-header h3 {
+  margin: 0;
+  color: #1f2937;
+}
+
+.btn-back-small {
+  padding: 8px 12px;
+  border: none;
+  background: #f3f4f6;
+  color: #374151;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-back-small:hover {
+  background: #e5e7eb;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+/* Color picker */
+.color-picker {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.color-option {
+  cursor: pointer;
+}
+
+.color-option input {
+  display: none;
+}
+
+.color-dot {
+  display: block;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.color-option input:checked + .color-dot {
+  border-color: #1f2937;
+  transform: scale(1.1);
+}
+
+.color-option:hover .color-dot {
+  transform: scale(1.1);
+}
+
+/* Amigos para añadir al grupo */
+.friends-to-add {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.friend-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.friend-checkbox:hover {
+  background: #f3f4f6;
+}
+
+.friend-checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: #6366f1;
+}
+
+.friend-avatar-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+}
+
+.friend-checkbox-name {
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.no-friends-text,
+.error-text,
+.loading-text {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.9rem;
+  padding: 20px;
+}
+
+.error-text {
+  color: #ef4444;
+}
+
+/* Botón crear grupo submit */
+.btn-create-group-submit {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.btn-create-group-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+}
+
+/* ===== VISTA DETALLE DE GRUPO ===== */
+
+.group-detail {
+  padding: 0;
+}
+
+.group-detail-header {
+  margin-bottom: 20px;
+}
+
+.group-detail-title {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 15px 0;
+}
+
+.group-detail-title h3 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.3rem;
+}
+
+.group-description {
+  margin: 5px 0 0 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.group-avatar-large {
+  width: 55px;
+  height: 55px;
+  font-size: 24px;
+  border-radius: 14px !important;
+}
+
+.group-admin-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn-add-member {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-add-member:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-delete-group {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #dc2626;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-delete-group:hover {
+  background: #fecaca;
+}
+
+.group-members-section {
+  margin-top: 20px;
+}
+
+.group-members-section h4 {
+  margin: 0 0 15px 0;
+  color: #374151;
+  font-size: 1rem;
+}
+
+/* Badges de miembros */
+.owner-badge {
+  font-size: 0.75rem;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.you-badge {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+/* Sección abandonar grupo */
+.group-leave-section {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn-leave-group {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #fecaca;
+  border-radius: 10px;
+  background: transparent;
+  color: #dc2626;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-leave-group:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+/* Modal añadir miembro */
+.add-member-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.add-member-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  width: 90%;
+  max-width: 400px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.add-member-modal h4 {
+  margin: 0 0 16px 0;
+  color: #1f2937;
+}
+
+.available-friends {
+  margin-bottom: 16px;
+}
+
+.available-friends .friend-item {
+  cursor: pointer;
+}
+
+.available-friends .friend-item:hover {
+  background: #eef2ff;
+}
+
+.btn-cancel {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background: #e5e7eb;
+}
+
+/* ===== RESPONSIVE ===== */
+
 @media (max-width: 768px) {
   .friends-modal {
     width: 95%;
@@ -313,13 +720,13 @@
   }
 
   .friends-tab {
-    padding: 12px 8px;
-    font-size: 0.85rem;
+    padding: 10px 6px;
+    font-size: 0.75rem;
   }
 
   .friends-tab-badge {
-    font-size: 0.7rem;
-    padding: 1px 6px;
+    font-size: 0.65rem;
+    padding: 1px 5px;
   }
 
   .friend-item {
@@ -339,5 +746,19 @@
 
   .friends-tab-content {
     max-height: 350px;
+    padding: 15px;
+  }
+
+  .group-detail-title {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .group-admin-actions {
+    flex-direction: column;
+  }
+
+  .color-picker {
+    justify-content: center;
   }
 }
