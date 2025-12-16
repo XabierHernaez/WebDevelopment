@@ -206,6 +206,7 @@ const getReminders = async (req, res) => {
     );
 
     // 2. Obtener recordatorios compartidos conmigo directamente (por amigos)
+    // ✅ FIX: Excluir recordatorios donde el usuario es el creador original
     const sharedByFriends = await pool.query(
       `SELECT r.*, 
               sr.owner_id as shared_by_id,
@@ -219,12 +220,13 @@ const getReminders = async (req, res) => {
        FROM reminders r
        JOIN shared_reminders sr ON r.id = sr.reminder_id
        JOIN users u ON sr.owner_id = u.id
-       WHERE sr.shared_with_id = $1
+       WHERE sr.shared_with_id = $1 AND r.user_id != $1
        ORDER BY r.created_at DESC`,
       [userId]
     );
 
     // 3. Obtener recordatorios compartidos conmigo a través de grupos
+    // ✅ FIX: Excluir recordatorios donde el usuario es el creador original
     const sharedByGroups = await pool.query(
       `SELECT DISTINCT r.*, 
               gr.shared_by as shared_by_id,
@@ -239,7 +241,7 @@ const getReminders = async (req, res) => {
        JOIN groups g ON gr.group_id = g.id
        JOIN group_members gm ON g.id = gm.group_id
        JOIN users u ON gr.shared_by = u.id
-       WHERE gm.user_id = $1 AND gr.shared_by != $1
+       WHERE gm.user_id = $1 AND gr.shared_by != $1 AND r.user_id != $1
        ORDER BY r.created_at DESC`,
       [userId]
     );
@@ -251,24 +253,16 @@ const getReminders = async (req, res) => {
       ...sharedByGroups.rows,
     ];
 
-    // Eliminar duplicados (si un recordatorio está compartido tanto por amigo como por grupo)
+    // ✅ FIX: Lógica de deduplicación simplificada
+    // Ahora que las queries ya excluyen los propios, solo necesitamos
+    // evitar duplicados entre amigos y grupos
     const uniqueReminders = [];
     const seenIds = new Set();
 
     for (const reminder of allReminders) {
-      // Si es propio, siempre incluirlo
-      if (reminder.is_owner) {
-        if (!seenIds.has(reminder.id)) {
-          seenIds.add(reminder.id);
-          uniqueReminders.push(reminder);
-        }
-      } else {
-        // Si es compartido, incluirlo solo si no lo hemos visto como propio
-        const key = `${reminder.id}-shared`;
-        if (!seenIds.has(reminder.id) && !seenIds.has(key)) {
-          seenIds.add(key);
-          uniqueReminders.push(reminder);
-        }
+      if (!seenIds.has(reminder.id)) {
+        seenIds.add(reminder.id);
+        uniqueReminders.push(reminder);
       }
     }
 
@@ -374,7 +368,8 @@ const getReminderById = async (req, res) => {
 // UPDATE - Actualizar recordatorio
 const updateReminder = async (req, res) => {
   const { id } = req.params;
-  const { title, description, datetime, address, is_completed } = req.body;
+  const { title, description, datetime, address, is_completed, is_notified } =
+    req.body;
   const userId = req.user.userId;
 
   try {
@@ -399,7 +394,7 @@ const updateReminder = async (req, res) => {
 
     // Si no es propietario y no tiene permiso de editar, solo puede marcar completado
     if (!isOwner && !existingReminder.can_edit) {
-      if (is_completed === undefined) {
+      if (is_completed === undefined && is_notified === undefined) {
         return res.status(403).json({
           success: false,
           message: "No tienes permiso para editar este recordatorio",
@@ -445,21 +440,35 @@ const updateReminder = async (req, res) => {
       }
     }
 
-    // Actualización normal
-    const result = await pool.query(
-      `UPDATE reminders 
-       SET title = COALESCE($1, title),
-           description = COALESCE($2, description),
-           datetime = COALESCE($3, datetime),
-           is_completed = COALESCE($4, is_completed),
-           updated_at = NOW()
-       WHERE id = $5 AND user_id = $6
-       RETURNING *`,
-      [title, description, datetime, is_completed, id, userId]
-    );
+    // Actualización normal - solo el propietario puede actualizar todos los campos
+    if (isOwner) {
+      const result = await pool.query(
+        `UPDATE reminders 
+         SET title = COALESCE($1, title),
+             description = COALESCE($2, description),
+             datetime = COALESCE($3, datetime),
+             is_completed = COALESCE($4, is_completed),
+             is_notified = COALESCE($5, is_notified),
+             updated_at = NOW()
+         WHERE id = $6 AND user_id = $7
+         RETURNING *`,
+        [title, description, datetime, is_completed, is_notified, id, userId]
+      );
 
-    if (result.rows.length === 0) {
-      // Intentar actualizar si es compartido con permiso
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Recordatorio no encontrado",
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "Recordatorio actualizado exitosamente",
+        reminder: result.rows[0],
+      });
+    } else {
+      // Si es compartido, solo puede marcar completado (no modificar otros campos)
       const sharedUpdate = await pool.query(
         `UPDATE reminders 
          SET is_completed = COALESCE($1, is_completed),
@@ -482,12 +491,6 @@ const updateReminder = async (req, res) => {
         message: "Recordatorio no encontrado",
       });
     }
-
-    res.json({
-      success: true,
-      message: "Recordatorio actualizado exitosamente",
-      reminder: result.rows[0],
-    });
   } catch (error) {
     console.error("❌ Error al actualizar recordatorio:", error);
     res.status(500).json({
