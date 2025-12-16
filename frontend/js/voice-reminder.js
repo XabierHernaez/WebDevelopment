@@ -358,7 +358,8 @@ function parseVoiceCommand(text) {
 
   // Asignar fecha/hora
   if (extractedTime) {
-    result.datetime = extractedTime.toISOString();
+    // Formatear como ISO string LOCAL (sin convertir a UTC)
+    result.datetime = formatLocalDateTime(extractedTime);
     result.confidence += 0.2;
   }
 
@@ -367,12 +368,24 @@ function parseVoiceCommand(text) {
     const defaultTime = new Date(now);
     defaultTime.setHours(defaultTime.getHours() + 1);
     defaultTime.setMinutes(0, 0, 0);
-    result.datetime = defaultTime.toISOString();
+    result.datetime = formatLocalDateTime(defaultTime);
     result.reminder_type = "datetime";
     result.confidence = 0.1; // Baja confianza
   }
 
   return result;
+}
+
+// Formatear fecha/hora en formato ISO pero manteniendo hora local
+function formatLocalDateTime(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 }
 
 // =====================================================
