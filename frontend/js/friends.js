@@ -64,24 +64,24 @@ function createFriendsModalHTML() {
         <div class="custom-modal-header info">
           <button class="friends-modal-close" onclick="closeFriendsModal()">✕</button>
           <div class="custom-modal-icon">👥</div>
-          <h2 id="friendsModalTitle" data-i18n="friendsTitle">Amigos y Grupos</h2>
+          <h2 id="friendsModalTitle" data-i18n="friendsTitle"></h2>
         </div>
         
         <div class="custom-modal-body">
           <!-- Tabs -->
           <div class="friends-tabs">
             <button class="friends-tab active" data-tab="friends" onclick="switchFriendsTab('friends')">
-              👥 <span data-i18n="myFriends">Amigos</span>
+              👥 <span data-i18n="myFriends"></span>
             </button>
             <button class="friends-tab" data-tab="requests" onclick="switchFriendsTab('requests')">
-              📩 <span data-i18n="requests">Solicitudes</span>
+              📩 <span data-i18n="requests"></span>
               <span class="friends-tab-badge" id="requestsBadge" style="display: none;">0</span>
             </button>
             <button class="friends-tab" data-tab="groups" onclick="switchFriendsTab('groups')">
-              👨‍👩‍👧‍👦 <span data-i18n="groups">Grupos</span>
+              👨‍👩‍👧‍👦 <span data-i18n="groups"></span>
             </button>
             <button class="friends-tab" data-tab="search" onclick="switchFriendsTab('search')">
-              🔍 <span data-i18n="add">Añadir</span>
+              🔍 <span data-i18n="add"></span>
             </button>
           </div>
           
@@ -89,7 +89,7 @@ function createFriendsModalHTML() {
           <div class="friends-tab-content active" id="tabFriends">
             <div class="friends-loading" id="friendsLoading">
               <div class="friends-loading-spinner"></div>
-              <p data-i18n="loading">Cargando...</p>
+              <p data-i18n="loading"></p>
             </div>
             <div class="friends-list" id="friendsList"></div>
           </div>
@@ -98,7 +98,7 @@ function createFriendsModalHTML() {
           <div class="friends-tab-content" id="tabRequests">
             <div class="friends-loading" id="requestsLoading">
               <div class="friends-loading-spinner"></div>
-              <p data-i18n="loading">Cargando...</p>
+              <p data-i18n="loading"></p>
             </div>
             <div class="friends-list" id="requestsList"></div>
           </div>
@@ -107,11 +107,11 @@ function createFriendsModalHTML() {
           <div class="friends-tab-content" id="tabGroups">
             <div class="friends-loading" id="groupsLoading">
               <div class="friends-loading-spinner"></div>
-              <p data-i18n="loading">Cargando...</p>
+              <p data-i18n="loading"></p>
             </div>
             <div id="groupsContainer">
               <button class="btn-create-group" onclick="showCreateGroupForm()">
-                ➕ <span data-i18n="createGroup">Crear Grupo</span>
+                ➕ <span data-i18n="createGroup"></span>
               </button>
               <div class="friends-list" id="groupsList"></div>
             </div>
@@ -128,15 +128,14 @@ function createFriendsModalHTML() {
                 type="email" 
                 class="friends-search-input" 
                 id="friendSearchInput"
-                placeholder="Buscar por email..."
                 data-i18n-placeholder="searchByEmail"
                 autocomplete="off"
               >
-              <p class="friends-search-hint" data-i18n="searchHint">Escribe al menos 3 caracteres para buscar</p>
+              <p class="friends-search-hint" data-i18n="searchHint"></p>
             </div>
             <div class="friends-loading" id="searchLoading" style="display: none;">
               <div class="friends-loading-spinner"></div>
-              <p data-i18n="searching">Buscando...</p>
+              <p data-i18n="searching"></p>
             </div>
             <div class="friends-list" id="searchResults"></div>
           </div>
@@ -146,6 +145,9 @@ function createFriendsModalHTML() {
   `;
 
   document.body.insertAdjacentHTML("beforeend", modalHTML);
+
+  // Aplicar traducciones al modal recién creado
+  applyTranslations();
 
   // Event listeners
   const modal = document.getElementById("friendsModal");
@@ -244,10 +246,11 @@ async function loadFriends() {
       list.innerHTML = `
         <div class="friends-empty">
           <div class="friends-empty-icon">👥</div>
-          <h4 data-i18n="noFriendsYet">Aún no tienes amigos</h4>
-          <p data-i18n="noFriendsHint">Busca usuarios por email para añadirlos</p>
+          <h4 data-i18n="noFriendsYet"></h4>
+          <p data-i18n="noFriendsHint"></p>
         </div>
       `;
+      applyTranslations();
     }
   } catch (error) {
     console.error("Error al cargar amigos:", error);
@@ -255,10 +258,11 @@ async function loadFriends() {
     list.innerHTML = `
       <div class="friends-empty">
         <div class="friends-empty-icon">❌</div>
-        <h4>Error al cargar</h4>
-        <p>No se pudieron cargar los amigos</p>
+        <h4 data-i18n="loadError"></h4>
+        <p data-i18n="connectionError"></p>
       </div>
     `;
+    applyTranslations();
   }
 }
 
@@ -287,10 +291,11 @@ async function loadPendingRequests() {
       list.innerHTML = `
         <div class="friends-empty">
           <div class="friends-empty-icon">📭</div>
-          <h4 data-i18n="noRequests">Sin solicitudes</h4>
-          <p data-i18n="noRequestsHint">No tienes solicitudes de amistad pendientes</p>
+          <h4 data-i18n="noRequests"></h4>
+          <p data-i18n="noRequestsHint"></p>
         </div>
       `;
+      applyTranslations();
     }
   } catch (error) {
     console.error("Error al cargar solicitudes:", error);
@@ -348,10 +353,11 @@ async function searchUsers(query) {
       results.innerHTML = `
         <div class="friends-empty">
           <div class="friends-empty-icon">🔍</div>
-          <h4 data-i18n="noUsersFound">No se encontraron usuarios</h4>
-          <p data-i18n="tryAnotherEmail">Prueba con otro email</p>
+          <h4 data-i18n="noUsersFound"></h4>
+          <p data-i18n="tryAnotherEmail"></p>
         </div>
       `;
+      applyTranslations();
     }
   } catch (error) {
     console.error("Error al buscar usuarios:", error);
@@ -369,14 +375,13 @@ function createFriendItemHTML(user, type) {
 
   if (type === "friend") {
     actionsHTML = `
-      <button class="friend-action-btn remove" onclick="removeFriend(${user.id}, '${user.name}')">
-        Eliminar
+      <button class="friend-action-btn remove" onclick="removeFriend(${user.id}, '${user.name}')" data-i18n="remove">
       </button>
     `;
   } else if (type === "request") {
     actionsHTML = `
       <button class="friend-action-btn accept" onclick="respondRequest(${user.friendship_id}, 'accept')">
-        ✓ Aceptar
+        ✓ <span data-i18n="accept"></span>
       </button>
       <button class="friend-action-btn reject" onclick="respondRequest(${user.friendship_id}, 'reject')">
         ✕
@@ -384,19 +389,19 @@ function createFriendItemHTML(user, type) {
     `;
   } else if (type === "search") {
     if (user.friendship_status === "accepted") {
-      actionsHTML = `<span class="friend-action-btn pending">✓ Amigos</span>`;
+      actionsHTML = `<span class="friend-action-btn pending">✓ <span data-i18n="friends"></span></span>`;
     } else if (user.friendship_status === "pending") {
-      actionsHTML = `<span class="friend-action-btn pending">⏳ Pendiente</span>`;
+      actionsHTML = `<span class="friend-action-btn pending">⏳ <span data-i18n="pending"></span></span>`;
     } else {
       actionsHTML = `
         <button class="friend-action-btn add" onclick="sendFriendRequest(${user.id}, this)">
-          + Añadir
+          + <span data-i18n="addFriend"></span>
         </button>
       `;
     }
   }
 
-  return `
+  const html = `
     <div class="friend-item" data-user-id="${user.id}">
       <div class="friend-avatar" style="background-color: ${color};">${initial}</div>
       <div class="friend-info">
@@ -408,6 +413,18 @@ function createFriendItemHTML(user, type) {
       </div>
     </div>
   `;
+
+  // Crear un contenedor temporal para aplicar traducciones
+  const temp = document.createElement("div");
+  temp.innerHTML = html;
+  
+  // Aplicar traducciones a este elemento
+  temp.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    el.textContent = t(key);
+  });
+
+  return temp.innerHTML;
 }
 
 async function sendFriendRequest(userId, button) {
@@ -428,19 +445,22 @@ async function sendFriendRequest(userId, button) {
 
     if (data.success) {
       button.className = "friend-action-btn pending";
-      button.textContent = "⏳ Pendiente";
+      button.innerHTML = `⏳ <span data-i18n="pending"></span>`;
       button.disabled = true;
-      showSuccess("Solicitud enviada correctamente", "Solicitud enviada", "✅");
+      applyTranslations();
+      showSuccess(t("requestSentSuccess"), t("requestSent"), "✅");
     } else {
       button.disabled = false;
-      button.textContent = "+ Añadir";
-      showError(data.message || "Error al enviar solicitud");
+      button.innerHTML = `+ <span data-i18n="addFriend"></span>`;
+      applyTranslations();
+      showError(data.message || t("connectionError"));
     }
   } catch (error) {
     console.error("Error:", error);
     button.disabled = false;
-    button.textContent = "+ Añadir";
-    showError("Error de conexión");
+    button.innerHTML = `+ <span data-i18n="addFriend"></span>`;
+    applyTranslations();
+    showError(t("connectionError"));
   }
 }
 
@@ -458,13 +478,11 @@ async function respondRequest(friendshipId, action) {
     const data = await response.json();
 
     if (data.success) {
-      const message =
-        action === "accept" ? "Solicitud aceptada" : "Solicitud rechazada";
-      showSuccess(
-        message,
-        action === "accept" ? "¡Nuevo amigo!" : "Rechazada",
-        action === "accept" ? "🎉" : "👋"
-      );
+      const message = action === "accept" ? t("requestAccepted") : t("requestRejected");
+      const title = action === "accept" ? t("newFriend") : t("rejected");
+      const icon = action === "accept" ? "🎉" : "👋";
+      
+      showSuccess(message, title, icon);
 
       await loadPendingRequests();
       await loadPendingRequestsCount();
@@ -473,18 +491,18 @@ async function respondRequest(friendshipId, action) {
         await loadFriends();
       }
     } else {
-      showError(data.message || "Error al responder");
+      showError(data.message || t("connectionError"));
     }
   } catch (error) {
     console.error("Error:", error);
-    showError("Error de conexión");
+    showError(t("connectionError"));
   }
 }
 
 async function removeFriend(friendId, friendName) {
   const confirmed = await showConfirm(
-    `¿Eliminar a ${friendName} de tus amigos?`,
-    "Eliminar amigo",
+    t("removeFriend").replace("{name}", friendName),
+    t("removeFriendTitle"),
     "👋"
   );
 
@@ -501,14 +519,14 @@ async function removeFriend(friendId, friendName) {
     const data = await response.json();
 
     if (data.success) {
-      showSuccess("Amigo eliminado correctamente", "Eliminado", "✅");
+      showSuccess(t("friendRemoved"), t("removed"), "✅");
       await loadFriends();
     } else {
-      showError(data.message || "Error al eliminar");
+      showError(data.message || t("connectionError"));
     }
   } catch (error) {
     console.error("Error:", error);
-    showError("Error de conexión");
+    showError(t("connectionError"));
   }
 }
 
@@ -547,10 +565,11 @@ async function loadGroups() {
       list.innerHTML = `
         <div class="friends-empty">
           <div class="friends-empty-icon">👨‍👩‍👧‍👦</div>
-          <h4 data-i18n="noGroupsYet">Aún no tienes grupos</h4>
-          <p data-i18n="noGroupsHint">Crea un grupo para compartir recordatorios</p>
+          <h4 data-i18n="noGroupsYet"></h4>
+          <p data-i18n="noGroupsHint"></p>
         </div>
       `;
+      applyTranslations();
     }
   } catch (error) {
     console.error("Error al cargar grupos:", error);
@@ -558,10 +577,11 @@ async function loadGroups() {
     list.innerHTML = `
       <div class="friends-empty">
         <div class="friends-empty-icon">❌</div>
-        <h4>Error al cargar</h4>
-        <p>No se pudieron cargar los grupos</p>
+        <h4 data-i18n="loadError"></h4>
+        <p data-i18n="connectionError"></p>
       </div>
     `;
+    applyTranslations();
   }
 }
 
@@ -569,22 +589,15 @@ function createGroupItemHTML(group) {
   const initial = group.name.charAt(0).toUpperCase();
   const color = group.color || "#6366f1";
   const memberCount = group.member_count || group.members?.length || 0;
+  const memberText = memberCount === 1 ? t("member") : t("members");
 
   return `
-    <div class="friend-item group-item" data-group-id="${
-      group.id
-    }" onclick="viewGroupDetails(${group.id})">
+    <div class="friend-item group-item" data-group-id="${group.id}" onclick="viewGroupDetails(${group.id})">
       <div class="friend-avatar group-avatar" style="background-color: ${color};">${initial}</div>
       <div class="friend-info">
         <div class="friend-name">${group.name}</div>
-        <div class="friend-email">${memberCount} miembro${
-    memberCount !== 1 ? "s" : ""
-  }</div>
-        ${
-          group.my_role === "admin"
-            ? '<span class="group-role-badge">Admin</span>'
-            : ""
-        }
+        <div class="friend-email">${memberCount} ${memberText}</div>
+        ${group.my_role === "admin" ? `<span class="group-role-badge" data-i18n="admin"></span>` : ""}
       </div>
       <div class="friend-actions">
         <span class="group-arrow">→</span>
@@ -603,22 +616,22 @@ function showCreateGroupForm() {
   createForm.innerHTML = `
     <div class="group-form">
       <div class="group-form-header">
-        <button class="btn-back-small" onclick="backToGroupsList()">← Volver</button>
-        <h3>Crear Nuevo Grupo</h3>
+        <button class="btn-back-small" onclick="backToGroupsList()"><span data-i18n="backToList"></span></button>
+        <h3 data-i18n="createGroup"></h3>
       </div>
       
       <div class="form-group">
-        <label for="groupName">Nombre del grupo *</label>
-        <input type="text" id="groupName" class="friends-search-input" placeholder="Ej: Familia, Trabajo..." maxlength="50">
+        <label for="groupName"><span data-i18n="groupName"></span> *</label>
+        <input type="text" id="groupName" class="friends-search-input" data-i18n-placeholder="groupNamePlaceholder" maxlength="50">
       </div>
       
       <div class="form-group">
-        <label for="groupDescription">Descripción (opcional)</label>
-        <input type="text" id="groupDescription" class="friends-search-input" placeholder="Descripción del grupo..." maxlength="150">
+        <label for="groupDescription" data-i18n="groupDescription"></label>
+        <input type="text" id="groupDescription" class="friends-search-input" data-i18n-placeholder="groupDescriptionPlaceholder" maxlength="150">
       </div>
       
       <div class="form-group">
-        <label>Color del grupo</label>
+        <label data-i18n="groupColor"></label>
         <div class="color-picker">
           <label class="color-option">
             <input type="radio" name="groupColor" value="#6366f1" checked>
@@ -648,19 +661,19 @@ function showCreateGroupForm() {
       </div>
       
       <div class="form-group">
-        <label>Añadir miembros (opcional)</label>
+        <label data-i18n="addMembers"></label>
         <div id="friendsToAdd" class="friends-to-add">
-          <p class="loading-text">Cargando amigos...</p>
+          <p class="loading-text" data-i18n="loadingFriends"></p>
         </div>
       </div>
       
       <button class="btn-create-group-submit" onclick="createGroup()">
-        ✓ Crear Grupo
+        ✓ <span data-i18n="createGroup"></span>
       </button>
     </div>
   `;
 
-  // Cargar amigos para añadir
+  applyTranslations();
   loadFriendsForGroup();
 }
 
@@ -688,19 +701,19 @@ async function loadFriendsForGroup() {
             <label class="friend-checkbox">
               <input type="checkbox" name="groupMembers" value="${friend.id}">
               <div class="friend-avatar-small" style="background-color: ${color};">${initial}</div>
-              <span class="friend-checkbox-name">${
-                friend.name || friend.email
-              }</span>
+              <span class="friend-checkbox-name">${friend.name || friend.email}</span>
             </label>
           `;
         })
         .join("");
     } else {
-      container.innerHTML = `<p class="no-friends-text">No tienes amigos para añadir. Puedes añadirlos después.</p>`;
+      container.innerHTML = `<p class="no-friends-text" data-i18n="noFriendsToAdd"></p>`;
+      applyTranslations();
     }
   } catch (error) {
     console.error("Error al cargar amigos:", error);
-    container.innerHTML = `<p class="error-text">Error al cargar amigos</p>`;
+    container.innerHTML = `<p class="error-text" data-i18n="errorLoadingFriends"></p>`;
+    applyTranslations();
   }
 }
 
@@ -718,7 +731,7 @@ async function createGroup() {
   );
 
   if (!name) {
-    showError("El nombre del grupo es obligatorio", "Campo requerido");
+    showError(t("groupNameRequired"), t("fieldRequired"));
     return;
   }
 
@@ -741,17 +754,17 @@ async function createGroup() {
 
     if (data.success) {
       showSuccess(
-        `Grupo "${name}" creado correctamente`,
-        "¡Grupo creado!",
+        t("createGroupSuccess").replace("{name}", name),
+        t("groupCreated"),
         "👨‍👩‍👧‍👦"
       );
       await loadGroups();
     } else {
-      showError(data.message || "Error al crear el grupo");
+      showError(data.message || t("createGroupError"));
     }
   } catch (error) {
     console.error("Error:", error);
-    showError("Error de conexión");
+    showError(t("connectionError"));
   }
 }
 
@@ -765,9 +778,10 @@ async function viewGroupDetails(groupId) {
   detailView.innerHTML = `
     <div class="friends-loading">
       <div class="friends-loading-spinner"></div>
-      <p>Cargando grupo...</p>
+      <p data-i18n="loadingGroup"></p>
     </div>
   `;
+  applyTranslations();
 
   try {
     const response = await fetch(`${GROUPS_API_URL}/${groupId}`, {
@@ -782,12 +796,12 @@ async function viewGroupDetails(groupId) {
       currentGroupView = data.group;
       renderGroupDetails(data.group);
     } else {
-      showError(data.message || "Error al cargar el grupo");
+      showError(data.message || t("loadError"));
       backToGroupsList();
     }
   } catch (error) {
     console.error("Error:", error);
-    showError("Error de conexión");
+    showError(t("connectionError"));
     backToGroupsList();
   }
 }
@@ -796,38 +810,31 @@ function renderGroupDetails(group) {
   const detailView = document.getElementById("groupDetailView");
   const isAdmin = group.my_role === "admin";
   const color = group.color || "#6366f1";
+  const memberText = group.members.length === 1 ? t("member") : t("members");
 
   detailView.innerHTML = `
     <div class="group-detail">
       <div class="group-detail-header">
-        <button class="btn-back-small" onclick="backToGroupsList()">← Volver</button>
+        <button class="btn-back-small" onclick="backToGroupsList()"><span data-i18n="backToList"></span></button>
         <div class="group-detail-title">
           <div class="friend-avatar group-avatar-large" style="background-color: ${color};">
             ${group.name.charAt(0).toUpperCase()}
           </div>
           <div>
             <h3>${group.name}</h3>
-            ${
-              group.description
-                ? `<p class="group-description">${group.description}</p>`
-                : ""
-            }
+            ${group.description ? `<p class="group-description">${group.description}</p>` : ""}
           </div>
         </div>
-        ${
-          isAdmin
-            ? `
+        ${isAdmin ? `
           <div class="group-admin-actions">
-            <button class="btn-add-member" onclick="showAddMemberForm(${group.id})">+ Añadir miembro</button>
+            <button class="btn-add-member" onclick="showAddMemberForm(${group.id})">+ <span data-i18n="addMember"></span></button>
             <button class="btn-delete-group" onclick="deleteGroup(${group.id}, '${group.name}')">🗑️</button>
           </div>
-        `
-            : ""
-        }
+        ` : ""}
       </div>
       
       <div class="group-members-section">
-        <h4>👥 Miembros (${group.members.length})</h4>
+        <h4>👥 <span data-i18n="groupMembers"></span> (${group.members.length})</h4>
         <div class="friends-list" id="groupMembersList">
           ${group.members
             .map((member) => createGroupMemberHTML(member, group, isAdmin))
@@ -835,22 +842,20 @@ function renderGroupDetails(group) {
         </div>
       </div>
       
-      ${
-        !isAdmin
-          ? `
+      ${!isAdmin ? `
         <div class="group-leave-section">
           <button class="btn-leave-group" onclick="leaveGroup(${group.id})">
-            🚪 Abandonar grupo
+            <span data-i18n="leaveGroup"></span>
           </button>
         </div>
-      `
-          : ""
-      }
+      ` : ""}
     </div>
     
     <!-- Formulario añadir miembro -->
     <div id="addMemberForm" style="display: none;"></div>
   `;
+
+  applyTranslations();
 }
 
 function createGroupMemberHTML(member, group, isAdmin) {
@@ -864,20 +869,19 @@ function createGroupMemberHTML(member, group, isAdmin) {
   let actionsHTML = "";
   if (isAdmin && !isOwner && !isSelf) {
     actionsHTML = `
-      <button class="friend-action-btn remove" onclick="removeGroupMember(${group.id}, ${member.id}, '${member.name}')">
-        Eliminar
+      <button class="friend-action-btn remove" onclick="removeGroupMember(${group.id}, ${member.id}, '${member.name}')" data-i18n="remove">
       </button>
     `;
   }
 
-  return `
+  const html = `
     <div class="friend-item" data-user-id="${member.id}">
       <div class="friend-avatar" style="background-color: ${color};">${initial}</div>
       <div class="friend-info">
         <div class="friend-name">
           ${member.name || "Usuario"}
-          ${isOwner ? '<span class="owner-badge">👑 Creador</span>' : ""}
-          ${isSelf ? '<span class="you-badge">(Tú)</span>' : ""}
+          ${isOwner ? `<span class="owner-badge"><span data-i18n="creator"></span></span>` : ""}
+          ${isSelf ? `<span class="you-badge"><span data-i18n="you"></span></span>` : ""}
         </div>
         <div class="friend-email">${member.email}</div>
       </div>
@@ -886,6 +890,16 @@ function createGroupMemberHTML(member, group, isAdmin) {
       </div>
     </div>
   `;
+
+  const temp = document.createElement("div");
+  temp.innerHTML = html;
+  
+  temp.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    el.textContent = t(key);
+  });
+
+  return temp.innerHTML;
 }
 
 async function showAddMemberForm(groupId) {
@@ -894,14 +908,15 @@ async function showAddMemberForm(groupId) {
   addMemberForm.innerHTML = `
     <div class="add-member-overlay">
       <div class="add-member-modal">
-        <h4>Añadir miembro</h4>
+        <h4 data-i18n="addMemberTitle"></h4>
         <div id="availableFriends" class="available-friends">
-          <p class="loading-text">Cargando amigos...</p>
+          <p class="loading-text" data-i18n="loadingFriends"></p>
         </div>
-        <button class="btn-cancel" onclick="hideAddMemberForm()">Cancelar</button>
+        <button class="btn-cancel" onclick="hideAddMemberForm()" data-i18n="cancel"></button>
       </div>
     </div>
   `;
+  applyTranslations();
 
   // Cargar amigos que no están en el grupo
   try {
@@ -933,33 +948,34 @@ async function showAddMemberForm(groupId) {
           const color = generateAvatarColor(friend.email);
 
           return `
-            <div class="friend-item" onclick="addMemberToGroup(${groupId}, ${
-            friend.id
-          }, '${friend.name}')">
+            <div class="friend-item" onclick="addMemberToGroup(${groupId}, ${friend.id}, '${friend.name}')">
               <div class="friend-avatar" style="background-color: ${color};">${initial}</div>
               <div class="friend-info">
                 <div class="friend-name">${friend.name || "Usuario"}</div>
                 <div class="friend-email">${friend.email}</div>
               </div>
               <div class="friend-actions">
-                <span class="friend-action-btn add">+ Añadir</span>
+                <span class="friend-action-btn add">+ <span data-i18n="addFriend"></span></span>
               </div>
             </div>
           `;
         })
         .join("");
+      applyTranslations();
     } else {
       container.innerHTML = `
         <div class="friends-empty">
-          <p>No tienes más amigos para añadir a este grupo</p>
+          <p data-i18n="noMoreFriends"></p>
         </div>
       `;
+      applyTranslations();
     }
   } catch (error) {
     console.error("Error:", error);
     document.getElementById("availableFriends").innerHTML = `
-      <p class="error-text">Error al cargar amigos</p>
+      <p class="error-text" data-i18n="errorLoadingFriends"></p>
     `;
+    applyTranslations();
   }
 }
 
@@ -982,22 +998,26 @@ async function addMemberToGroup(groupId, userId, userName) {
     const data = await response.json();
 
     if (data.success) {
-      showSuccess(`${userName} añadido al grupo`, "Miembro añadido", "✅");
+      showSuccess(
+        t("addedToGroup").replace("{name}", userName),
+        t("memberAdded"),
+        "✅"
+      );
       hideAddMemberForm();
       viewGroupDetails(groupId);
     } else {
-      showError(data.message || "Error al añadir miembro");
+      showError(data.message || t("connectionError"));
     }
   } catch (error) {
     console.error("Error:", error);
-    showError("Error de conexión");
+    showError(t("connectionError"));
   }
 }
 
 async function removeGroupMember(groupId, userId, userName) {
   const confirmed = await showConfirm(
-    `¿Eliminar a ${userName} del grupo?`,
-    "Eliminar miembro",
+    t("removeMemberConfirm").replace("{name}", userName),
+    t("removeMemberTitle"),
     "👋"
   );
 
@@ -1017,21 +1037,21 @@ async function removeGroupMember(groupId, userId, userName) {
     const data = await response.json();
 
     if (data.success) {
-      showSuccess("Miembro eliminado del grupo", "Eliminado", "✅");
+      showSuccess(t("memberRemoved"), t("removed"), "✅");
       viewGroupDetails(groupId);
     } else {
-      showError(data.message || "Error al eliminar miembro");
+      showError(data.message || t("connectionError"));
     }
   } catch (error) {
     console.error("Error:", error);
-    showError("Error de conexión");
+    showError(t("connectionError"));
   }
 }
 
 async function leaveGroup(groupId) {
   const confirmed = await showConfirm(
-    "¿Seguro que quieres abandonar este grupo?",
-    "Abandonar grupo",
+    t("leaveGroupConfirm"),
+    t("leaveGroupTitle"),
     "🚪"
   );
 
@@ -1051,22 +1071,22 @@ async function leaveGroup(groupId) {
     const data = await response.json();
 
     if (data.success) {
-      showSuccess("Has abandonado el grupo", "Grupo abandonado", "👋");
+      showSuccess(t("youLeftGroup"), t("groupLeft"), "👋");
       backToGroupsList();
       await loadGroups();
     } else {
-      showError(data.message || "Error al abandonar el grupo");
+      showError(data.message || t("connectionError"));
     }
   } catch (error) {
     console.error("Error:", error);
-    showError("Error de conexión");
+    showError(t("connectionError"));
   }
 }
 
 async function deleteGroup(groupId, groupName) {
   const confirmed = await showConfirm(
-    `¿Eliminar el grupo "${groupName}"? Esta acción no se puede deshacer.`,
-    "Eliminar grupo",
+    t("deleteGroupConfirm").replace("{name}", groupName),
+    t("deleteGroupTitle"),
     "🗑️"
   );
 
@@ -1083,15 +1103,15 @@ async function deleteGroup(groupId, groupName) {
     const data = await response.json();
 
     if (data.success) {
-      showSuccess("Grupo eliminado correctamente", "Grupo eliminado", "✅");
+      showSuccess(t("groupDeletedSuccess"), t("groupDeleted"), "✅");
       backToGroupsList();
       await loadGroups();
     } else {
-      showError(data.message || "Error al eliminar el grupo");
+      showError(data.message || t("connectionError"));
     }
   } catch (error) {
     console.error("Error:", error);
-    showError("Error de conexión");
+    showError(t("connectionError"));
   }
 }
 

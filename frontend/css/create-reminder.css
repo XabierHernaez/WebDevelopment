@@ -66,7 +66,8 @@
   grid-template-columns: 450px 1fr;
   gap: 0;
   flex: 1;
-  max-width: 1400px;
+  max-width: none;
+  padding: 0 20px;
   width: 100%;
   margin: 0 auto;
   background: white;
@@ -677,16 +678,17 @@
     max-height: 300px;
   }
 }
-/* Ocultar marcador de geolocalización por defecto de Leaflet */
+/* Ocultar SOLO el control de ubicación de Leaflet (si existe) */
 .leaflet-control-locate-location {
   display: none !important;
 }
 
-.leaflet-marker-icon.leaflet-zoom-animated.leaflet-interactive {
-  display: none !important;
+/* IMPORTANTE: Permitir que TODOS los marcadores sean visibles */
+.leaflet-marker-icon {
+  display: block !important;
 }
 
-/* Pero mostrar nuestro marcador personalizado */
+/* El marcador del usuario (azul) debe ser visible */
 .user-location-marker {
   display: block !important;
 }

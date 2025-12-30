@@ -146,7 +146,7 @@ function initUserAvatar() {
       avatarContainer.classList.remove("active");
       const profileTitle =
         typeof t === "function" ? t("myProfile") : "Mi Perfil";
-      const profileMsg = `Nombre: ${currentUser.name}\nEmail: ${currentUser.email}`;
+        const profileMsg = `${t("name")}: ${currentUser.name}<br>${t("email")}: ${currentUser.email}`;
       showInfo(profileMsg, profileTitle, "👤");
     });
   }

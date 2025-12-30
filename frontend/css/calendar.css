@@ -29,8 +29,9 @@
 }
 
 .calendar-container {
-  max-width: 1400px;
+  max-width: none; 
   width: 100%;
+  padding: 0 20px;
   margin: 0 auto;
   padding: 20px;
   background: white;
