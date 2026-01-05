@@ -146,7 +146,7 @@ function initUserAvatar() {
       avatarContainer.classList.remove("active");
       const profileTitle =
         typeof t === "function" ? t("myProfile") : "Mi Perfil";
-        const profileMsg = `${t("name")}: ${currentUser.name}<br>${t("email")}: ${currentUser.email}`;
+      const profileMsg = `${t("name")}: ${currentUser.name}<br>${t("email")}: ${currentUser.email}`;
       showInfo(profileMsg, profileTitle, "👤");
     });
   }
@@ -163,6 +163,9 @@ function initUserAvatar() {
       }
     });
   }
+
+  // ✅ NUEVO: Cargar notificaciones de solicitudes pendientes
+  loadPendingNotifications();
 }
 
 // ===== FIN AVATAR =====
@@ -973,6 +976,59 @@ async function deleteReminder(id) {
     );
   }
 }
+
+// ===== NOTIFICACIONES DE SOLICITUDES PENDIENTES =====
+
+// Cargar número de solicitudes pendientes
+async function loadPendingNotifications() {
+  try {
+    const response = await fetch(`http://localhost:5000/api/friends/requests/pending`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      updateNotificationBadge(data.count);
+    }
+  } catch (error) {
+    console.error("Error al cargar notificaciones:", error);
+  }
+}
+
+// Actualizar badge de notificaciones
+function updateNotificationBadge(count) {
+  const avatarContainer = document.getElementById("userAvatarContainer");
+  
+  if (!avatarContainer) return;
+
+  // Buscar si ya existe el badge
+  let badge = avatarContainer.querySelector(".notification-badge");
+
+  if (count > 0) {
+    // Si no existe, crearlo
+    if (!badge) {
+      badge = document.createElement("span");
+      badge.className = "notification-badge";
+      avatarContainer.appendChild(badge);
+    }
+    
+    // Actualizar número
+    badge.textContent = count > 99 ? "99+" : count;
+    badge.style.display = "flex";
+  } else {
+    // Si count es 0, ocultar badge
+    if (badge) {
+      badge.style.display = "none";
+    }
+  }
+}
+
+// Exportar función para actualizar desde otros archivos
+window.updateNotificationBadge = updateNotificationBadge;
+window.loadPendingNotifications = loadPendingNotifications;
 
 // Cargar al iniciar
 loadReminders();

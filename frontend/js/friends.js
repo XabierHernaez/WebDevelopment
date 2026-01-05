@@ -487,6 +487,11 @@ async function respondRequest(friendshipId, action) {
       await loadPendingRequests();
       await loadPendingRequestsCount();
 
+      // ✅ AGREGAR ESTA LÍNEA
+      if (typeof window.loadPendingNotifications === "function") {
+        window.loadPendingNotifications();
+      }
+
       if (action === "accept") {
         await loadFriends();
       }
