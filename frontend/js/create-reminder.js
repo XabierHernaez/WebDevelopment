@@ -435,7 +435,7 @@ window.onMapClick = function (lat, lng, address) {
 
 // Crear recordatorio
 reminderForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
+   e.preventDefault();
 
   const title = document.getElementById("reminderTitle").value;
   const description = quill.root.innerHTML;
@@ -474,7 +474,15 @@ reminderForm.addEventListener("submit", async (e) => {
       await showInfo(msgDesc, msgTitle, "📅");
       return;
     }
-    reminderData.datetime = datetime;
+
+    // ✅ Convertir a formato con zona horaria
+    const date = new Date(datetime);
+    const offset = -date.getTimezoneOffset();
+    const offsetHours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, "0");
+    const offsetMinutes = String(Math.abs(offset) % 60).padStart(2, "0");
+    const offsetSign = offset >= 0 ? "+" : "-";
+    
+    reminderData.datetime = `${datetime}:00${offsetSign}${offsetHours}:${offsetMinutes}`;
   }
 
   if (recurrenceValue && recurrenceValue !== "none") {

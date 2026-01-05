@@ -383,9 +383,15 @@ function formatLocalDateTime(date) {
   const day = String(date.getDate()).padStart(2, "0");
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
-  const seconds = String(date.getSeconds()).padStart(2, "0");
 
-  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  // ✅ Obtener offset de zona horaria
+  const offset = -date.getTimezoneOffset();
+  const offsetHours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, "0");
+  const offsetMinutes = String(Math.abs(offset) % 60).padStart(2, "0");
+  const offsetSign = offset >= 0 ? "+" : "-";
+
+  // Formato: "2026-01-05T10:00:00+01:00"
+  return `${year}-${month}-${day}T${hours}:${minutes}:00${offsetSign}${offsetHours}:${offsetMinutes}`;
 }
 
 // =====================================================

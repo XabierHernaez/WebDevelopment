@@ -115,14 +115,14 @@ const createReminder = async (req, res) => {
     // Insertar recordatorio en PostgreSQL
     const result = await pool.query(
       `INSERT INTO reminders (user_id, title, description, reminder_type, datetime, location_id, is_recurring, recurrence_pattern, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
-       RETURNING *`,
+      VALUES ($1, $2, $3, $4, $5::timestamptz, $6, $7, $8, NOW(), NOW())
+      RETURNING *`,
       [
         userId,
         title,
         description || null,
         reminder_type,
-        datetime || null,
+        datetime || null,  // ← Añadido ::timestamptz en la query
         locationId,
         is_recurring || false,
         recurrence_pattern || null,
