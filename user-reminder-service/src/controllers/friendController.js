@@ -318,6 +318,33 @@ const removeFriend = async (req, res) => {
   const currentUserId = req.user.userId;
 
   try {
+    // 1. Verificar que son amigos
+    const friendshipCheck = await pool.query(
+      `SELECT * FROM friendships 
+       WHERE ((requester_id = $1 AND addressee_id = $2)
+          OR (requester_id = $2 AND addressee_id = $1))
+         AND status = 'accepted'`,
+      [currentUserId, friend_id]
+    );
+
+    if (friendshipCheck.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Amistad no encontrada",
+      });
+    }
+
+    // 2. Eliminar recordatorios compartidos en ambas direcciones
+    // - Recordatorios que YO compartí con ÉL (dejan de estar compartidos con él)
+    // - Recordatorios que ÉL compartió CONMIGO (los elimino de mi vista)
+    await pool.query(
+      `DELETE FROM shared_reminders 
+       WHERE (owner_id = $1 AND shared_with_id = $2)
+          OR (owner_id = $2 AND shared_with_id = $1)`,
+      [currentUserId, friend_id]
+    );
+
+    // 3. Eliminar la amistad
     const result = await pool.query(
       `DELETE FROM friendships 
        WHERE ((requester_id = $1 AND addressee_id = $2)
@@ -327,14 +354,8 @@ const removeFriend = async (req, res) => {
       [currentUserId, friend_id]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Amistad no encontrada",
-      });
-    }
-
     console.log(`✅ Amistad eliminada entre ${currentUserId} y ${friend_id}`);
+    console.log(`✅ Recordatorios compartidos eliminados`);
 
     res.json({
       success: true,
