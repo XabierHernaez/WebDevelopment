@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 from datetime import datetime
 
 # Importar configuración y servicios
-from config.database import locations_collection
-from services.geocoding_service import geocode_address, reverse_geocode
+from app.config.database import locations_collection
+from app.services.geocoding_service import geocode_address, reverse_geocode
 
 load_dotenv()
 

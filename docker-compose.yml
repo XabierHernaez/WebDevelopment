@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # PostgreSQL - Base de datos relacional
+  # PostgreSQL
   postgres:
     image: postgres:15
     container_name: georemind_postgres
@@ -14,13 +14,16 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./georemind_schema.sql:/docker-entrypoint-initdb.d/schema.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U georemind_user -d georemind_db"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - georemind-network
 
-  # MongoDB - Base de datos NoSQL
+  # MongoDB
   mongodb:
     image: mongo:6
     container_name: georemind_mongo
@@ -37,9 +40,91 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - georemind-network
+
+  # User & Reminder Service
+  # User & Reminder Service
+  user-service:
+    build:
+      context: ./user-reminder-service
+      dockerfile: Dockerfile
+    container_name: georemind_user_service
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      NODE_ENV: development
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: georemind_db
+      POSTGRES_USER: georemind_user
+      POSTGRES_PASSWORD: georemind_pass123
+      MONGODB_URI: mongodb://georemind_user:georemind_pass123@mongodb:27017/
+      JWT_SECRET: tu_super_secreto_cambiar_en_produccion_12345
+      JWT_EXPIRES_IN: 7d
+      GEO_SERVICE_URL: http://geo-service:8000
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: xabierhernaez106@gmail.com                    # ✅ CAMBIADO
+      SMTP_PASS: dbtmqphbmuahqkye                              # ✅ CAMBIADO
+      EMAIL_FROM: xabierhernaez106@gmail.com                   # ✅ CAMBIADO
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    networks:
+      - georemind-network
+
+  # Geo-Location Service
+  geo-service:
+    build:
+      context: ./geo-location-service
+      dockerfile: Dockerfile
+    container_name: georemind_geo_service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: 8000
+      ENVIRONMENT: development
+      MONGODB_URI: mongodb://georemind_user:georemind_pass123@mongodb:27017/
+      OPENSTREETMAP_API: https://nominatim.openstreetmap.org
+      OVERPASS_API: https://overpass-api.de/api/interpreter
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - georemind-network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: georemind_api_gateway
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+      NODE_ENV: development
+      USER_SERVICE_URL: http://user-service:3001
+      GEO_SERVICE_URL: http://geo-service:8000
+    depends_on:
+      - user-service
+      - geo-service
+    networks:
+      - georemind-network
 
 volumes:
   postgres_data:
     driver: local
   mongo_data:
     driver: local
+
+networks:
+  georemind-network:
+    driver: bridge
