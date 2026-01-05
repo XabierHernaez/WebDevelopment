@@ -94,8 +94,45 @@ const getUserLocations = async (userId) => {
   }
 };
 
+/**
+ * Eliminar ubicación de MongoDB
+ */
+const deleteLocation = async (locationId) => {
+  try {
+    const response = await axios.delete(
+      `${GEO_SERVICE_URL}/api/locations/${locationId}`
+    );
+
+    if (response.data.success) {
+      return {
+        success: true,
+        message: "Ubicación eliminada correctamente",
+      };
+    }
+
+    return {
+      success: false,
+      error: "No se pudo eliminar la ubicación",
+    };
+  } catch (error) {
+    console.error("❌ Error al eliminar ubicación:", error.message);
+    // Si la ubicación no existe (404), considerarlo éxito
+    if (error.response?.status === 404) {
+      return {
+        success: true,
+        message: "Ubicación ya no existe",
+      };
+    }
+    return {
+      success: false,
+      error: error.response?.data?.detail || "Error al eliminar ubicación",
+    };
+  }
+};
+
 module.exports = {
   geocodeAddress,
   saveLocation,
   getUserLocations,
+  deleteLocation,
 };
