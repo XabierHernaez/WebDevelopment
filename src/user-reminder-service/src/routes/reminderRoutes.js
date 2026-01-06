@@ -27,16 +27,7 @@ router.get("/", getReminders);
 // GET /api/reminders/shared - Obtener solo recordatorios compartidos conmigo
 router.get("/shared", getSharedWithMe);
 
-// GET /api/reminders/:id - Obtener un recordatorio específico
-router.get("/:id", getReminderById);
-
-// PUT /api/reminders/:id - Actualizar recordatorio
-router.put("/:id", updateReminder);
-
-// DELETE /api/reminders/:id - Eliminar recordatorio
-router.delete("/:id", deleteReminder);
-
-// ===== RUTAS DE RECURRENCIA =====
+// ===== RUTAS ESPECÍFICAS PRIMERO (ANTES DE /:id) =====
 
 // PUT /api/reminders/:id/recurring - Activar/actualizar recurrencia
 router.put("/:id/recurring", setRecurrence);
@@ -47,12 +38,21 @@ router.delete("/:id/recurring", removeRecurrence);
 // GET /api/reminders/:id/occurrences - Obtener próximas ocurrencias
 router.get("/:id/occurrences", getOccurrences);
 
-// ===== RUTAS DE COMPARTIR =====
-
 // POST /api/reminders/:id/share - Compartir recordatorio con amigos
 router.post("/:id/share", shareReminder);
 
 // DELETE /api/reminders/:id/share/:friendId - Dejar de compartir con un amigo
 router.delete("/:id/share/:friendId", unshareReminder);
+
+// ===== RUTAS GENÉRICAS AL FINAL =====
+
+// GET /api/reminders/:id - Obtener un recordatorio específico
+router.get("/:id", getReminderById);
+
+// PUT /api/reminders/:id - Actualizar recordatorio
+router.put("/:id", updateReminder);
+
+// DELETE /api/reminders/:id - Eliminar recordatorio
+router.delete("/:id", deleteReminder);
 
 module.exports = router;
