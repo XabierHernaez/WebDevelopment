@@ -1,5 +1,5 @@
 // Configuración
-const API_URL = "http://localhost:3001/api";
+const API_URL = "http://localhost:5000/api";
 let token = localStorage.getItem("token");
 let currentUser = JSON.parse(localStorage.getItem("user"));
 let reminders = [];
